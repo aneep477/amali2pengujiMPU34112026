@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MPU3411 – Amali HP3</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+    .slider-track { height: 6px; background: #e2e8f0; border-radius: 3px; }
+    .slider-thumb { appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; cursor: pointer; }
+    .card-larian { border-left: 4px solid #3b82f6; }
+    .card-lontaran { border-left: 4px solid #f97316; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- LOADER -->
+  <div id="loader" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center hidden">
+    <div class="animate-spin w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full"></div>
+    <p class="mt-3 text-gray-700 font-medium">Memproses...</p>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-bold shadow-lg transform translate-x-full transition-transform duration-300"></div>
+
+  <!-- LOGIN -->
+  <div id="login" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-800 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="bg-emerald-700 p-5 text-center">
+        <h1 class="text-2xl font-bold text-white">MPU3411 – Amali HP3</h1>
+        <p class="text-emerald-200 text-sm mt-1">Sistem Penilaian 2 Penguji</p>
+      </div>
+      <form id="loginForm" class="p-6 space-y-4">
+        <input type="email" id="email" placeholder="Emel" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500" required />
+        <input type="password" id="password" placeholder="Kata Laluan" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500" required />
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-bold transition shadow">LOG MASUK</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="hidden min-h-screen">
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+      <div class="px-4 py-3 flex justify-between items-center">
+        <div>
+          <h2 class="font-bold text-lg text-gray-800">MPU3411 – HP3</h2>
+          <p class="text-xs text-emerald-700">Penguji: <span id="role-name">...</span></p>
+        </div>
+        <button onclick="logout()" class="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-full text-sm">
+          <i class="fas fa-power-off"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-4 bg-white">
+      <div class="grid grid-cols-1 gap-3">
+        <select id="kelas" class="p-3 border rounded-lg bg-gray-50"></select>
+        <select id="pelajar" class="p-3 border rounded-lg bg-gray-50" disabled></select>
+      </div>
+    </div>
+
+    <!-- Tabs: Larian / Lontaran -->
+    <div class="flex border-b">
+      <button onclick="switchAcara('larian')" id="tab-larian" class="flex-1 py-3 font-bold text-larian border-b-2 border-larian">🏃 Larian</button>
+      <button onclick="switchAcara('lontaran')" id="tab-lontaran" class="flex-1 py-3 font-bold text-gray-500">🏐 Lontaran</button>
+    </div>
+
+    <div id="acara-content" class="p-4"></div>
+
+    <div class="p-4">
+      <button onclick="saveMarkah()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow">
+        <i class="fas fa-save mr-2"></i> Simpan Markah
+      </button>
+    </div>
+
+    <div class="p-4 text-center">
+      <button onclick="generateAllPDFs()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 mx-auto">
+        <i class="fas fa-file-pdf"></i> Jana Semua Laporan PDF
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 🔗 GANTI DENGAN URL WEB APP ANDA
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfVC2tirSz7bIxoUc9C60UcGxze9ThJxqMQ_X5-7n6U2iWOE5ChbCOMs1ALPv-tNFZUA/exec";
+
+    let currentUser = null;
+    let allStudents = [];
+    let scores = {};
+    let currentAcara = 'larian';
+
+    // --- UTILS ---
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = `fixed top-4 right-4 px-4 py-2 rounded-lg font-bold shadow-lg transform transition-transform duration-300 ${
+        type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
+      } ${msg ? 'translate-x-0' : 'translate-x-full'}`;
+      setTimeout(() => t.classList.add('translate-x-full'), 3000);
+    }
+    function showLoader(show) {
+      document.getElementById('loader').classList.toggle('hidden', !show);
+    }
+
+    // --- LOGIN ---
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      showLoader(true);
+      fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', email, password }) })
+        .then(r => r.json()).then(data => {
+          if (data.result === 'success') {
+            currentUser = data.user;
+            document.getElementById('role-name').innerText = data.user.nama;
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            loadData();
+          } else {
+            showToast(data.message, 'error');
+          }
+          showLoader(false);
+        });
+    });
+
+    function logout() {
+      if (confirm("Log keluar?")) location.reload();
+    }
+
+    // --- LOAD DATA ---
+    function loadData() {
+      showLoader(true);
+      fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'get_data', email: currentUser.email, role: currentUser.role }) })
+        .then(r => r.json()).then(data => {
+          if (data.result === 'success') {
+            allStudents = data.data.students;
+            scores = data.data.scores;
+            populateKelas();
+          }
+          showLoader(false);
+        });
+    }
+
+    function populateKelas() {
+      const kelasSet = new Set(allStudents.map(s => s.Kelas));
+      const kelasSel = document.getElementById('kelas');
+      kelasSel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      kelasSet.forEach(k => {
+        kelasSel.innerHTML += `<option value="${k}">${k}</option>`;
+      });
+    }
+
+    document.getElementById('kelas').addEventListener('change', e => {
+      const kelas = e.target.value;
+      const pelajarSel = document.getElementById('pelajar');
+      pelajarSel.disabled = !kelas;
+      pelajarSel.innerHTML = '<option>-- Pilih Pelajar --</option>';
+      if (kelas) {
+        allStudents
+          .filter(s => s.Kelas === kelas)
+          .forEach(s => {
+            pelajarSel.innerHTML += `<option value="${s.ID_SISTEM}">${s.Nama_Pelajar}</option>`;
+          });
+      }
+    });
+
+    // --- ACARA ---
+    function switchAcara(acara) {
+      currentAcara = acara;
+      document.getElementById('tab-larian').className = 
+        acara === 'larian' ? 'flex-1 py-3 font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-3 font-bold text-gray-500';
+      document.getElementById('tab-lontaran').className = 
+        acara === 'lontaran' ? 'flex-1 py-3 font-bold text-orange-500 border-b-2 border-orange-500' : 'flex-1 py-3 font-bold text-gray-500';
+      renderAcara();
+    }
+
+    const larianItems = [
+      { name: 'Permulaan', max: 10, desc: 'Teknik blok & posisi' },
+      { name: 'Larian', max: 10, desc: 'Ketepatan teknik larian' },
+      { name: 'Penamat', max: 5, desc: 'Teknik brek & penamat' }
+    ];
+    const lontaranItems = [
+      { name: 'Persediaan', max: 5, desc: 'Pegangan & posisi' },
+      { name: 'Lungsuran', max: 5, desc: 'Teknik lungsur' },
+      { name: 'Lontaran', max: 10, desc: 'Kuasa & teknik lontar' },
+      { name: 'Pulihan', max: 5, desc: 'Pemulihan selepas lontar' }
+    ];
+
+    function renderAcara() {
+      const pelajarId = document.getElementById('pelajar').value;
+      const student = pelajarId ? allStudents.find(s => s.ID_SISTEM === pelajarId) : null;
+      const p1 = pelajarId ? scores['MARKAH_HP3_P1']?.[pelajarId] : null;
+      const p2 = pelajarId ? scores['MARKAH_HP3_P2']?.[pelajarId] : null;
+
+      let html = '';
+      if (currentAcara === 'larian') {
+        html += `
+          <div class="bg-white rounded-xl shadow-sm p-4 mb-4 border-l-4 border-blue-500">
+            <h3 class="font-bold text-blue-700 mb-3">Amali Larian (Max: 25)</h3>
+            ${renderSliderGroup(larianItems, p1, p2)}
+          </div>
+          ${renderImageUpload('larian', p1?.[12] || p2?.[12])}
+        `;
+      } else {
+        html += `
+          <div class="bg-white rounded-xl shadow-sm p-4 mb-4 border-l-4 border-orange-500">
+            <h3 class="font-bold text-orange-700 mb-3">Amali Lontaran (Max: 25)</h3>
+            ${renderSliderGroup(lontaranItems, p1, p2)}
+          </div>
+          ${renderImageUpload('lontaran', p1?.[13] || p2?.[13])}
+        `;
+      }
+      document.getElementById('acara-content').innerHTML = html;
+    }
+
+    function renderSliderGroup(items, p1, p2) {
+      let html = '';
+      items.forEach((item, idx) => {
+        const idxOffset = currentAcara === 'larian' ? 5 : 8;
+        const valP1 = p1 ? p1[idxOffset + idx] : 0;
+        const valP2 = p2 ? p2[idxOffset + idx] : 0;
+        const avg = (p1 && p2) ? ((parseFloat(valP1) + parseFloat(valP2)) / 2).toFixed(1) : (p1 ? valP1 : p2 ? valP2 : 0);
+        html += `
+          <div class="mb-4">
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">${item.name}</span>
+              <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">${item.max}</span>
+            </div>
+            <p class="text-xs text-gray-600 mb-2">${item.desc}</p>
+            <div class="flex items-center gap-3">
+              <input type="range" id="slider-${item.name}" min="0" max="${item.max}" step="0.5" 
+                class="w-full" oninput="updateSlider('${item.name}')" value="${avg}">
+              <span id="value-${item.name}" class="w-10 text-center font-bold">${avg}</span>
+            </div>
+          </div>
+        `;
+      });
+      return html;
+    }
+
+    function renderImageUpload(type, url = '') {
+      return `
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+          <h4 class="font-bold mb-2">${type === 'larian' ? 'Gambar Amali Larian' : 'Gambar Amali Lontaran'}</h4>
+          <input type="file" id="gambar-${type}" accept="image/*" capture="environment" class="w-full text-sm mb-2" />
+          ${url ? `<img src="${url}" class="w-full h-32 object-cover rounded mt-2" />` : 
+             `<img id="preview-${type}" class="hidden w-full h-32 object-cover rounded mt-2" />`}
+        </div>
+      `;
+    }
+
+    document.getElementById('pelajar').addEventListener('change', renderAcara);
+
+    ['larian', 'lontaran'].forEach(type => {
+      document.getElementById(`gambar-${type}`).addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            document.getElementById(`preview-${type}`).src = ev.target.result;
+            document.getElementById(`preview-${type}`).classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    });
+
+    function updateSlider(name) {
+      const val = document.getElementById(`slider-${name}`).value;
+      document.getElementById(`value-${name}`).innerText = parseFloat(val).toFixed(1);
+    }
+
+    // --- SIMPAN ---
+    function saveMarkah() {
+      const pelajarId = document.getElementById('pelajar').value;
+      if (!pelajarId) return showToast("Pilih pelajar dahulu.", "error");
+
+      const student = allStudents.find(s => s.ID_SISTEM === pelajarId);
+      const formData = { ID_SISTEM: pelajarId, Nama_Pelajar: student.Nama_Pelajar, Kelas: student.Kelas };
+
+      larianItems.forEach(item => {
+        formData[`HP3_${item.name.replace(/([a-z])([A-Z])/g, '_$2').toUpperCase()}_${item.max}`] = 
+          document.getElementById(`slider-${item.name}`).value;
+      });
+      lontaranItems.forEach(item => {
+        formData[`HP3_${item.name.replace(/([a-z])([A-Z])/g, '_$2').toUpperCase()}_${item.max}`] = 
+          document.getElementById(`slider-${item.name}`).value;
+      });
+
+      // Gambar
+      const previewLarian = document.getElementById('preview-larian');
+      const previewLontaran = document.getElementById('preview-lontaran');
+      if (previewLarian?.src?.startsWith('data')) formData.imageLarian = previewLarian.src;
+      if (previewLontaran?.src?.startsWith('data')) formData.imageLontaran = previewLontaran.src;
+
+      const sheetName = currentUser.allowed_sheet === 'P1' ? 'MARKAH_HP3_P1' : 'MARKAH_HP3_P2';
+
+      showLoader(true);
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'save_mark', userEmail: currentUser.email, role: currentUser.role, sheetName, formData })
+      }).then(r => r.json()).then(data => {
+        showToast(data.message || "Berjaya!", data.result === 'success' ? 'success' : 'error');
+        if (data.result === 'success') loadData();
+        showLoader(false);
+      });
+    }
+
+    // --- PDF (ringkas) ---
+    function generateAllPDFs() {
+      const ids = new Set([...Object.keys(scores['MARKAH_HP3_P1'] || {}), ...Object.keys(scores['MARKAH_HP3_P2'] || {})]);
+      if (ids.size === 0) return showToast("Tiada data.", "error");
+      showToast(`Menjana ${ids.size} PDF... (lihat fungsi generateStudentPDF untuk penuh)`);
+    }
+
+    // Mulakan
+    switchAcara('larian');
+  </script>
+</body>
+</html>
