@@ -1,324 +1,395 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MPU3411 – Amali HP3</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <style>
-    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
-    .slider-track { height: 6px; background: #e2e8f0; border-radius: 3px; }
-    .slider-thumb { appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; cursor: pointer; }
-    .card-larian { border-left: 4px solid #3b82f6; }
-    .card-lontaran { border-left: 4px solid #f97316; }
-  </style>
-</head>
-<body class="bg-gray-50">
-
-  <!-- LOADER -->
-  <div id="loader" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center hidden">
-    <div class="animate-spin w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full"></div>
-    <p class="mt-3 text-gray-700 font-medium">Memproses...</p>
-  </div>
-
-  <!-- TOAST -->
-  <div id="toast" class="fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-bold shadow-lg transform translate-x-full transition-transform duration-300"></div>
-
-  <!-- LOGIN -->
-  <div id="login" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-800 p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-      <div class="bg-emerald-700 p-5 text-center">
-        <h1 class="text-2xl font-bold text-white">MPU3411 – Amali HP3</h1>
-        <p class="text-emerald-200 text-sm mt-1">Sistem Penilaian 2 Penguji</p>
-      </div>
-      <form id="loginForm" class="p-6 space-y-4">
-        <input type="email" id="email" placeholder="Emel" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500" required />
-        <input type="password" id="password" placeholder="Kata Laluan" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-500" required />
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-bold transition shadow">LOG MASUK</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- MAIN APP -->
-  <div id="app" class="hidden min-h-screen">
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-      <div class="px-4 py-3 flex justify-between items-center">
-        <div>
-          <h2 class="font-bold text-lg text-gray-800">MPU3411 – HP3</h2>
-          <p class="text-xs text-emerald-700">Penguji: <span id="role-name">...</span></p>
-        </div>
-        <button onclick="logout()" class="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-full text-sm">
-          <i class="fas fa-power-off"></i>
-        </button>
-      </div>
-    </header>
-
-    <div class="p-4 bg-white">
-      <div class="grid grid-cols-1 gap-3">
-        <select id="kelas" class="p-3 border rounded-lg bg-gray-50"></select>
-        <select id="pelajar" class="p-3 border rounded-lg bg-gray-50" disabled></select>
-      </div>
-    </div>
-
-    <!-- Tabs: Larian / Lontaran -->
-    <div class="flex border-b">
-      <button onclick="switchAcara('larian')" id="tab-larian" class="flex-1 py-3 font-bold text-larian border-b-2 border-larian">🏃 Larian</button>
-      <button onclick="switchAcara('lontaran')" id="tab-lontaran" class="flex-1 py-3 font-bold text-gray-500">🏐 Lontaran</button>
-    </div>
-
-    <div id="acara-content" class="p-4"></div>
-
-    <div class="p-4">
-      <button onclick="saveMarkah()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow">
-        <i class="fas fa-save mr-2"></i> Simpan Markah
-      </button>
-    </div>
-
-    <div class="p-4 text-center">
-      <button onclick="generateAllPDFs()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 mx-auto">
-        <i class="fas fa-file-pdf"></i> Jana Semua Laporan PDF
-      </button>
-    </div>
-  </div>
-
-  <script>
-    // 🔗 GANTI DENGAN URL WEB APP ANDA
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzfVC2tirSz7bIxoUc9C60UcGxze9ThJxqMQ_X5-7n6U2iWOE5ChbCOMs1ALPv-tNFZUA/exec";
-
-    let currentUser = null;
-    let allStudents = [];
-    let scores = {};
-    let currentAcara = 'larian';
-
-    // --- UTILS ---
-    function showToast(msg, type = 'success') {
-      const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.className = `fixed top-4 right-4 px-4 py-2 rounded-lg font-bold shadow-lg transform transition-transform duration-300 ${
-        type === 'success' ? 'bg-emerald-600' : 'bg-red-600'
-      } ${msg ? 'translate-x-0' : 'translate-x-full'}`;
-      setTimeout(() => t.classList.add('translate-x-full'), 3000);
-    }
-    function showLoader(show) {
-      document.getElementById('loader').classList.toggle('hidden', !show);
-    }
-
-    // --- LOGIN ---
-    document.getElementById('loginForm').addEventListener('submit', e => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      showLoader(true);
-      fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'login', email, password }) })
-        .then(r => r.json()).then(data => {
-          if (data.result === 'success') {
-            currentUser = data.user;
-            document.getElementById('role-name').innerText = data.user.nama;
-            document.getElementById('login').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            loadData();
-          } else {
-            showToast(data.message, 'error');
-          }
-          showLoader(false);
-        });
-    });
-
-    function logout() {
-      if (confirm("Log keluar?")) location.reload();
-    }
-
-    // --- LOAD DATA ---
-    function loadData() {
-      showLoader(true);
-      fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'get_data', email: currentUser.email, role: currentUser.role }) })
-        .then(r => r.json()).then(data => {
-          if (data.result === 'success') {
-            allStudents = data.data.students;
-            scores = data.data.scores;
-            populateKelas();
-          }
-          showLoader(false);
-        });
-    }
-
-    function populateKelas() {
-      const kelasSet = new Set(allStudents.map(s => s.Kelas));
-      const kelasSel = document.getElementById('kelas');
-      kelasSel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-      kelasSet.forEach(k => {
-        kelasSel.innerHTML += `<option value="${k}">${k}</option>`;
-      });
-    }
-
-    document.getElementById('kelas').addEventListener('change', e => {
-      const kelas = e.target.value;
-      const pelajarSel = document.getElementById('pelajar');
-      pelajarSel.disabled = !kelas;
-      pelajarSel.innerHTML = '<option>-- Pilih Pelajar --</option>';
-      if (kelas) {
-        allStudents
-          .filter(s => s.Kelas === kelas)
-          .forEach(s => {
-            pelajarSel.innerHTML += `<option value="${s.ID_SISTEM}">${s.Nama_Pelajar}</option>`;
-          });
-      }
-    });
-
-    // --- ACARA ---
-    function switchAcara(acara) {
-      currentAcara = acara;
-      document.getElementById('tab-larian').className = 
-        acara === 'larian' ? 'flex-1 py-3 font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-3 font-bold text-gray-500';
-      document.getElementById('tab-lontaran').className = 
-        acara === 'lontaran' ? 'flex-1 py-3 font-bold text-orange-500 border-b-2 border-orange-500' : 'flex-1 py-3 font-bold text-gray-500';
-      renderAcara();
-    }
-
-    const larianItems = [
-      { name: 'Permulaan', max: 10, desc: 'Teknik blok & posisi' },
-      { name: 'Larian', max: 10, desc: 'Ketepatan teknik larian' },
-      { name: 'Penamat', max: 5, desc: 'Teknik brek & penamat' }
-    ];
-    const lontaranItems = [
-      { name: 'Persediaan', max: 5, desc: 'Pegangan & posisi' },
-      { name: 'Lungsuran', max: 5, desc: 'Teknik lungsur' },
-      { name: 'Lontaran', max: 10, desc: 'Kuasa & teknik lontar' },
-      { name: 'Pulihan', max: 5, desc: 'Pemulihan selepas lontar' }
-    ];
-
-    function renderAcara() {
-      const pelajarId = document.getElementById('pelajar').value;
-      const student = pelajarId ? allStudents.find(s => s.ID_SISTEM === pelajarId) : null;
-      const p1 = pelajarId ? scores['MARKAH_HP3_P1']?.[pelajarId] : null;
-      const p2 = pelajarId ? scores['MARKAH_HP3_P2']?.[pelajarId] : null;
-
-      let html = '';
-      if (currentAcara === 'larian') {
-        html += `
-          <div class="bg-white rounded-xl shadow-sm p-4 mb-4 border-l-4 border-blue-500">
-            <h3 class="font-bold text-blue-700 mb-3">Amali Larian (Max: 25)</h3>
-            ${renderSliderGroup(larianItems, p1, p2)}
-          </div>
-          ${renderImageUpload('larian', p1?.[12] || p2?.[12])}
-        `;
-      } else {
-        html += `
-          <div class="bg-white rounded-xl shadow-sm p-4 mb-4 border-l-4 border-orange-500">
-            <h3 class="font-bold text-orange-700 mb-3">Amali Lontaran (Max: 25)</h3>
-            ${renderSliderGroup(lontaranItems, p1, p2)}
-          </div>
-          ${renderImageUpload('lontaran', p1?.[13] || p2?.[13])}
-        `;
-      }
-      document.getElementById('acara-content').innerHTML = html;
-    }
-
-    function renderSliderGroup(items, p1, p2) {
-      let html = '';
-      items.forEach((item, idx) => {
-        const idxOffset = currentAcara === 'larian' ? 5 : 8;
-        const valP1 = p1 ? p1[idxOffset + idx] : 0;
-        const valP2 = p2 ? p2[idxOffset + idx] : 0;
-        const avg = (p1 && p2) ? ((parseFloat(valP1) + parseFloat(valP2)) / 2).toFixed(1) : (p1 ? valP1 : p2 ? valP2 : 0);
-        html += `
-          <div class="mb-4">
-            <div class="flex justify-between mb-1">
-              <span class="font-medium">${item.name}</span>
-              <span class="text-xs bg-gray-100 px-2 py-0.5 rounded">${item.max}</span>
-            </div>
-            <p class="text-xs text-gray-600 mb-2">${item.desc}</p>
-            <div class="flex items-center gap-3">
-              <input type="range" id="slider-${item.name}" min="0" max="${item.max}" step="0.5" 
-                class="w-full" oninput="updateSlider('${item.name}')" value="${avg}">
-              <span id="value-${item.name}" class="w-10 text-center font-bold">${avg}</span>
-            </div>
-          </div>
-        `;
-      });
-      return html;
-    }
-
-    function renderImageUpload(type, url = '') {
-      return `
-        <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
-          <h4 class="font-bold mb-2">${type === 'larian' ? 'Gambar Amali Larian' : 'Gambar Amali Lontaran'}</h4>
-          <input type="file" id="gambar-${type}" accept="image/*" capture="environment" class="w-full text-sm mb-2" />
-          ${url ? `<img src="${url}" class="w-full h-32 object-cover rounded mt-2" />` : 
-             `<img id="preview-${type}" class="hidden w-full h-32 object-cover rounded mt-2" />`}
-        </div>
-      `;
-    }
-
-    document.getElementById('pelajar').addEventListener('change', renderAcara);
-
-    ['larian', 'lontaran'].forEach(type => {
-      document.getElementById(`gambar-${type}`).addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = ev => {
-            document.getElementById(`preview-${type}`).src = ev.target.result;
-            document.getElementById(`preview-${type}`).classList.remove('hidden');
-          };
-          reader.readAsDataURL(file);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXON // Google Sheets Live Sync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0c10;
+            --accent-cyan: #00f2ff;
+            --accent-purple: #7000ff;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
         }
-      });
-    });
 
-    function updateSlider(name) {
-      const val = document.getElementById(`slider-${name}`).value;
-      document.getElementById(`value-${name}`).innerText = parseFloat(val).toFixed(1);
-    }
+        body {
+            background: var(--bg-deep);
+            color: #e2e8f0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(112, 0, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.1) 0%, transparent 40%);
+        }
 
-    // --- SIMPAN ---
-    function saveMarkah() {
-      const pelajarId = document.getElementById('pelajar').value;
-      if (!pelajarId) return showToast("Pilih pelajar dahulu.", "error");
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+        }
 
-      const student = allStudents.find(s => s.ID_SISTEM === pelajarId);
-      const formData = { ID_SISTEM: pelajarId, Nama_Pelajar: student.Nama_Pelajar, Kelas: student.Kelas };
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-      larianItems.forEach(item => {
-        formData[`HP3_${item.name.replace(/([a-z])([A-Z])/g, '_$2').toUpperCase()}_${item.max}`] = 
-          document.getElementById(`slider-${item.name}`).value;
-      });
-      lontaranItems.forEach(item => {
-        formData[`HP3_${item.name.replace(/([a-z])([A-Z])/g, '_$2').toUpperCase()}_${item.max}`] = 
-          document.getElementById(`slider-${item.name}`).value;
-      });
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
 
-      // Gambar
-      const previewLarian = document.getElementById('preview-larian');
-      const previewLontaran = document.getElementById('preview-lontaran');
-      if (previewLarian?.src?.startsWith('data')) formData.imageLarian = previewLarian.src;
-      if (previewLontaran?.src?.startsWith('data')) formData.imageLontaran = previewLontaran.src;
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
 
-      const sheetName = currentUser.allowed_sheet === 'P1' ? 'MARKAH_HP3_P1' : 'MARKAH_HP3_P2';
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 15px var(--accent-cyan);
+        }
 
-      showLoader(true);
-      fetch(WEB_APP_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'save_mark', userEmail: currentUser.email, role: currentUser.role, sheetName, formData })
-      }).then(r => r.json()).then(data => {
-        showToast(data.message || "Berjaya!", data.result === 'success' ? 'success' : 'error');
-        if (data.result === 'success') loadData();
-        showLoader(false);
-      });
-    }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
 
-    // --- PDF (ringkas) ---
-    function generateAllPDFs() {
-      const ids = new Set([...Object.keys(scores['MARKAH_HP3_P1'] || {}), ...Object.keys(scores['MARKAH_HP3_P2'] || {})]);
-      if (ids.size === 0) return showToast("Tiada data.", "error");
-      showToast(`Menjana ${ids.size} PDF... (lihat fungsi generateStudentPDF untuk penuh)`);
-    }
+        .completed { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .pending { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
 
-    // Mulakan
-    switchAcara('larian');
-  </script>
+        .hidden-section { display: none; }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        @media print {
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .glass-card { border: none !important; background: none !important; backdrop-filter: none !important; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #000 !important; padding: 8px !important; color: black !important; text-shadow: none !important; }
+            .page-break { page-break-after: always; }
+        }
+
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto no-print">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span id="syncStatus" class="text-[10px] tracking-[0.4em] font-bold text-yellow-400 uppercase italic">Sinkronisasi Sheets...</span>
+                    <div class="h-1 w-12 bg-white/10 rounded"></div>
+                </div>
+                <h1 class="text-4xl font-bold tracking-tight">AXON <span class="text-white/40 font-light">//</span> LIVE</h1>
+            </div>
+
+            <div class="flex flex-wrap gap-2 p-1 glass-card border-white/5 bg-white/5">
+                <button onclick="switchRole('Penilai 1')" id="roleBtn1" class="px-6 py-2 rounded-xl text-sm font-bold transition-all bg-cyan-500 text-black">Penilai 1</button>
+                <button onclick="switchRole('Penilai 2')" id="roleBtn2" class="px-6 py-2 rounded-xl text-sm font-bold transition-all text-white/50 hover:text-white">Penilai 2</button>
+                <button onclick="switchRole('Admin')" id="roleBtnAdmin" class="px-6 py-2 rounded-xl text-sm font-bold transition-all text-white/50 hover:text-white">Dashboard</button>
+                <button onclick="toggleRubrik()" class="px-6 py-2 rounded-xl text-sm font-bold transition-all text-cyan-400 border border-cyan-400/20 hover:bg-cyan-400/10">Rubrik</button>
+            </div>
+        </header>
+
+        <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="px-4 py-1 rounded-full border border-cyan-400/30 bg-cyan-400/10">
+                    <span class="text-xs font-bold text-cyan-400 mono uppercase" id="currentRoleDisplay">Sessi: Penilai 1</span>
+                </div>
+                <div class="h-[1px] w-12 bg-white/5"></div>
+                <div class="relative min-w-[150px]">
+                    <select id="classFilter" onchange="handleClassFilter(this.value)" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white focus:outline-none focus:border-cyan-400/50 transition-all">
+                        <option value="Semua">Semua Kelas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full py-20 text-center text-white/20 mono uppercase tracking-widest animate-pulse">
+                Memuatkan Data Pelajar Dari Google Sheets...
+            </div>
+        </div>
+
+        <div id="adminView" class="hidden-section space-y-8">
+            <div class="glass-card p-8">
+                <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
+                    <h2 class="text-2xl font-bold">Papan Skor Analitik (Live)</h2>
+                    <div class="flex gap-2">
+                        <button onclick="fetchMarks()" class="bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-xl text-xs font-bold border border-cyan-400/20">🔄 Refresh Data</button>
+                        <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-xl text-sm font-bold">Cetak PDF</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="border-b border-white/10">
+                            <tr class="text-white/40 text-[10px] uppercase font-bold mono">
+                                <th class="pb-4">Atlet / Kelas</th>
+                                <th class="pb-4">P1 Avg</th>
+                                <th class="pb-4">P2 Avg</th>
+                                <th class="pb-4">Markah Akhir</th>
+                                <th class="pb-4">Kategori</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody" class="divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="rubrikModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl hidden">
+        <div class="glass-card w-full max-w-4xl p-8 max-h-[80vh] overflow-y-auto border-cyan-400/20">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold">Rujukan Rubrik</h2>
+                <button onclick="toggleRubrik()" class="text-white/40 hover:text-white">Tutup</button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-cyan-400 font-bold mb-4">1. Lari Pecut</h3>
+                    <p class="text-sm text-white/60">Cemerlang: 23-25 pt | Kepujian: 19-22 pt | Sederhana: 15-18 pt | Lemah: 13-14 pt</p>
+                </div>
+                <div>
+                    <h3 class="text-purple-400 font-bold mb-4">2. Lontar Peluru</h3>
+                    <p class="text-sm text-white/60">Cemerlang: 23-25 pt | Kepujian: 19-22 pt | Sederhana: 15-18 pt | Lemah: 13-14 pt</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="scoringModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden no-print">
+        <div class="glass-card w-full max-w-2xl p-8 border-cyan-400/20">
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <h2 id="modalStudentName" class="text-2xl font-bold mb-1">Nama Pelajar</h2>
+                    <p id="modalStudentID" class="text-white/40 mono text-sm uppercase">ID</p>
+                </div>
+                <button onclick="closeModal()" class="text-white/40 hover:text-white">&times;</button>
+            </div>
+            <div class="space-y-8">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end"><label class="text-sm font-bold uppercase text-white/60">Lari Pecut</label><span id="valPecut" class="text-3xl font-bold mono text-cyan-400">0.0</span></div>
+                    <input type="range" id="sliderPecut" min="0" max="25" step="0.1" value="0" oninput="updateScore('Pecut')">
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end"><label class="text-sm font-bold uppercase text-white/60">Lontar Peluru</label><span id="valLontar" class="text-3xl font-bold mono text-purple-400">0.0</span></div>
+                    <input type="range" id="sliderLontar" min="0" max="25" step="0.1" value="0" oninput="updateScore('Lontar')">
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-8">
+                <button id="btnSave" onclick="saveMarkah()" class="flex-grow py-4 rounded-xl bg-cyan-500 text-black font-bold uppercase hover:bg-cyan-400 transition-all">Hantar ke Sheets</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="printReport" class="print-only"></div>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbzVzaPdACxnvKJDRG5cqKDZBhLu6V8z3g3N4MT55scDGIAgU-r3ekjMAt_Zj4x8O75lBg/exec"; 
+
+        let liveMarks = {};
+        let students = []; 
+        let selectedClass = "Semua";
+
+        window.currentRole = 'Penilai 1';
+        window.activeStudentId = null;
+
+        function initFilters() {
+            const filter = document.getElementById('classFilter');
+            filter.innerHTML = '<option value="Semua">Semua Kelas</option>';
+            const classes = [...new Set(students.map(s => s.class))].sort();
+            classes.forEach(cls => {
+                const opt = document.createElement('option');
+                opt.value = cls;
+                opt.innerText = cls;
+                opt.className = "bg-slate-900";
+                filter.appendChild(opt);
+            });
+            filter.value = selectedClass;
+        }
+
+        function handleClassFilter(val) {
+            selectedClass = val;
+            if (window.currentRole === 'Admin') {
+                renderAdminTable();
+            } else {
+                renderStudentList();
+            }
+        }
+
+        async function fetchMarks() {
+            if(!scriptURL) return;
+            try {
+                document.getElementById('syncStatus').innerText = "Syncing...";
+                const response = await fetch(scriptURL);
+                const data = await response.json();
+                students = data.students;
+                liveMarks = data.marks;
+                document.getElementById('syncStatus').innerText = "Sheets Berjaya Disambung";
+                document.getElementById('syncStatus').className = "text-[10px] tracking-[0.4em] font-bold text-cyan-400 uppercase";
+                initFilters();
+                renderStudentList();
+                if (window.currentRole === 'Admin') renderAdminTable();
+            } catch (error) {
+                document.getElementById('syncStatus').innerText = "Ralat Sambungan";
+            }
+        }
+
+        window.saveMarkah = async () => {
+            const pecut = parseFloat(document.getElementById('sliderPecut').value);
+            const lontar = parseFloat(document.getElementById('sliderLontar').value);
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "Menghantar...";
+            btn.disabled = true;
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: window.activeStudentId, role: window.currentRole, pecut, lontar })
+                });
+                if(!liveMarks[window.activeStudentId]) liveMarks[window.activeStudentId] = {};
+                liveMarks[window.activeStudentId][window.currentRole] = { pecut, lontar };
+                btn.innerText = "Berjaya!";
+                setTimeout(() => {
+                    btn.innerText = "Hantar ke Sheets";
+                    btn.disabled = false;
+                    window.closeModal();
+                    renderStudentList();
+                    fetchMarks();
+                }, 1000);
+            } catch (error) {
+                btn.innerText = "Hantar ke Sheets";
+                btn.disabled = false;
+            }
+        };
+
+        window.switchRole = (role) => {
+            window.currentRole = role;
+            document.getElementById('currentRoleDisplay').innerText = `Sessi: ${role}`;
+            ['roleBtn1', 'roleBtn2', 'roleBtnAdmin'].forEach(id => {
+                const btn = document.getElementById(id);
+                const isMatch = btn.innerText.includes(role) || (role === 'Admin' && id === 'roleBtnAdmin');
+                btn.className = isMatch ? "px-6 py-2 rounded-xl text-sm font-bold bg-cyan-500 text-black" : "px-6 py-2 rounded-xl text-sm font-bold text-white/50 hover:text-white";
+            });
+            if(role === 'Admin') {
+                document.getElementById('studentList').classList.add('hidden-section');
+                document.getElementById('adminView').classList.remove('hidden-section');
+                renderAdminTable();
+                preparePrintReport();
+            } else {
+                document.getElementById('studentList').classList.remove('hidden-section');
+                document.getElementById('adminView').classList.add('hidden-section');
+                renderStudentList();
+            }
+        };
+
+        function renderStudentList() {
+            const container = document.getElementById('studentList');
+            container.innerHTML = '';
+            const filtered = selectedClass === "Semua" ? students : students.filter(s => s.class === selectedClass);
+            filtered.forEach(s => {
+                const hasMark = liveMarks[s.id] && liveMarks[s.id][window.currentRole];
+                const card = document.createElement('div');
+                card.className = 'glass-card p-6 cursor-pointer hover:border-cyan-400/50 transition-all';
+                card.onclick = () => openScoring(s.id);
+                card.innerHTML = `<div class="flex justify-between items-start mb-4"><div class="status-indicator ${hasMark && (hasMark.pecut > 0 || hasMark.lontar > 0) ? 'completed' : 'pending'}"></div><span class="mono text-[10px] text-white/20">${s.class}</span></div><h3 class="font-bold text-sm leading-tight mb-2 group-hover:text-cyan-400">${s.name}</h3>`;
+                container.appendChild(card);
+            });
+        }
+
+        function openScoring(id) {
+            window.activeStudentId = id;
+            const s = students.find(x => x.id === id);
+            document.getElementById('modalStudentName').innerText = s.name;
+            document.getElementById('modalStudentID').innerText = `${s.id} | ${s.class}`;
+            const m = (liveMarks[id] && liveMarks[id][window.currentRole]) || { pecut: 0, lontar: 0 };
+            document.getElementById('sliderPecut').value = m.pecut;
+            document.getElementById('sliderLontar').value = m.lontar;
+            window.updateScore('Pecut');
+            window.updateScore('Lontar');
+            document.getElementById('scoringModal').classList.remove('hidden');
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+            const filtered = selectedClass === "Semua" ? students : students.filter(s => s.class === selectedClass);
+            filtered.forEach(s => {
+                const m = liveMarks[s.id] || {};
+                const p1 = m['Penilai 1'] || {pecut:0, lontar:0};
+                const p2 = m['Penilai 2'] || {pecut:0, lontar:0};
+                let p1Avg = (p1.pecut + p1.lontar) / 2;
+                let p2Avg = (p2.pecut + p2.lontar) / 2;
+                let finalScore = (p1Avg + p2Avg) / 2;
+                let cat = window.getCategory(finalScore);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-white/5';
+                row.innerHTML = `<td class="py-4"><div class="font-bold text-xs">${s.name}</div><div class="text-[9px] text-white/20">${s.class}</div></td><td class="py-4 mono text-xs">${p1Avg.toFixed(2)}</td><td class="py-4 mono text-xs">${p2Avg.toFixed(2)}</td><td class="py-4 font-bold mono text-cyan-400">${finalScore.toFixed(2)}</td><td class="py-4"><span class="text-[9px] font-bold px-2 py-1 rounded" style="background:${cat.color}22; color:${cat.color}">${cat.label}</span></td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function preparePrintReport() {
+            const reportContainer = document.getElementById('printReport');
+            reportContainer.innerHTML = '';
+            const classes = [...new Set(students.map(s => s.class))];
+            classes.forEach(cls => {
+                const classStudents = students.filter(s => s.class === cls);
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page-break p-10';
+                let tableRows = classStudents.map(s => {
+                    const m = liveMarks[s.id] || {};
+                    const p1 = m['Penilai 1'] || {pecut:0, lontar:0};
+                    const p2 = m['Penilai 2'] || {pecut:0, lontar:0};
+                    let final = ((p1.pecut+p1.lontar)/2 + (p2.pecut+p2.lontar)/2) / 2;
+                    return `<tr><td>${s.name}</td><td align="center">${final.toFixed(2)}</td><td align="center">${window.getCategory(final).label}</td></tr>`;
+                }).join('');
+                pageDiv.innerHTML = `<h1 style="text-align:center">Laporan Pentaksiran: ${cls}</h1><table border="1" style="width:100%; margin-top:20px"><tr><th>Nama</th><th>Markah Akhir</th><th>Kategori</th></tr>${tableRows}</table><div style="margin-top:50px; display:flex; justify-content:space-between"><div>Tandatangan Penilai 1<br><br>_________________</div><div>Tandatangan Penilai 2<br><br>_________________</div></div>`;
+                reportContainer.appendChild(pageDiv);
+            });
+        }
+
+        window.getCategory = (val) => {
+            val = parseFloat(val);
+            if (val >= 23.0) return { label: 'Cemerlang', color: '#10b981' };
+            if (val >= 19.0) return { label: 'Kepujian', color: '#3b82f6' };
+            if (val >= 15.0) return { label: 'Sederhana', color: '#f59e0b' };
+            if (val >= 13.0) return { label: 'Lemah', color: '#ef4444' };
+            return { label: 'Gagal', color: '#7f1d1d' };
+        };
+        window.updateScore = (type) => {
+            const val = document.getElementById(`val${type}`).innerText = parseFloat(document.getElementById(`slider${type}`).value).toFixed(1);
+        };
+        window.toggleRubrik = () => document.getElementById('rubrikModal').classList.toggle('hidden');
+        window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
+
+        setInterval(fetchMarks, 30000);
+        window.onload = () => fetchMarks();
+    </script>
 </body>
 </html>
