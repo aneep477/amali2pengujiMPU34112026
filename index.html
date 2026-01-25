@@ -100,6 +100,13 @@
         }
 
         .print-only { display: none; }
+
+        /* Rubrik Styling */
+        .rubric-category {
+            border-left: 4px solid;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -177,27 +184,109 @@
         </div>
     </div>
 
-    <!-- Modals (Mobile optimized) -->
+    <!-- Rubrik Modal -->
     <div id="rubrikModal" class="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-xl hidden">
-        <div class="glass-card w-full max-w-4xl p-6 md:p-8 max-h-[85vh] overflow-y-auto border-cyan-400/20 rounded-t-[30px] md:rounded-[24px]">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold">Rujukan Rubrik</h2>
+        <div class="glass-card w-full max-w-5xl p-6 md:p-8 max-h-[85vh] overflow-y-auto border-cyan-400/20 rounded-t-[30px] md:rounded-[24px]">
+            <div class="flex justify-between items-center mb-8 sticky top-0 bg-slate-900/80 py-2 backdrop-blur-md z-10">
+                <h2 class="text-2xl font-bold neo-gradient">Rujukan Rubrik Pentaksiran</h2>
                 <button onclick="toggleRubrik()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white/40">&times;</button>
             </div>
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="bg-white/5 p-5 rounded-2xl">
-                    <h3 class="text-cyan-400 font-bold mb-3">1. Lari Pecut (100m)</h3>
-                    <p class="text-xs text-white/50 leading-relaxed">Pemarkahan berdasarkan kelajuan teknik permulaan (starting block), pecutan, dan koordinasi badan semasa di garisan penamat.</p>
+            
+            <div class="space-y-12">
+                <!-- Julat Markah -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px] font-bold uppercase mono">
+                    <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Amat Cemerlang<br>23.0 - 25.0</div>
+                    <div class="p-2 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-400/30">Cemerlang<br>19.0 - 22.9</div>
+                    <div class="p-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">Kepujian<br>15.0 - 18.9</div>
+                    <div class="p-2 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30">Sederhana<br>13.0 - 14.9</div>
+                    <div class="p-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30">Lemah<br>< 13.0</div>
                 </div>
-                <div class="bg-white/5 p-5 rounded-2xl">
-                    <h3 class="text-purple-400 font-bold mb-3">2. Lontar Peluru</h3>
-                    <p class="text-xs text-white/50 leading-relaxed">Pemarkahan berdasarkan fasa lungsuran (glide), sudut pelepasan peluru, dan imbangan badan selepas melontar.</p>
-                </div>
+
+                <!-- Lari Pecut -->
+                <section>
+                    <h3 class="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+                        <span class="w-2 h-8 bg-cyan-400 rounded-full"></span> AMALI LARI PECUT (25%)
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="rubric-category border-emerald-500">
+                            <h4 class="text-emerald-400 font-bold text-sm mb-2">Amat Cemerlang (23.0 - 25.0)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Persediaan:</b> Pasang blok tanpa bantuan. <b>Ke Garisan:</b> Melangkah pantas, posisi dekam tepat, tangan seluas bahu. <b>Sedia:</b> Punggung tinggi, berat badan ke hadapan, kepala relaks. <b>Mula:</b> Tindak balas amat pantas, tolakan kaki maksimum, koordinasi sempurna tanpa bantuan. <b>Penamat:</b> Torso mendahului, dipping tekal, kekalkan kepantasan tanpa bantuan.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-cyan-500">
+                            <h4 class="text-cyan-400 font-bold text-sm mb-2">Cemerlang (19.0 - 22.9)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Persediaan:</b> Pasang blok teknik betul. <b>Ke Garisan:</b> Melangkah setelah isyarat, posisi dekam & bahu selari. <b>Sedia:</b> Punggung tidak begitu tinggi, berat ke hadapan. <b>Mula:</b> Tindak balas pantas, tolakan kaki maksimum, bantuan minima. <b>Penamat:</b> Torso mendahului, dipping tangan ayun belakang, kekalkan imbangan.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-blue-500">
+                            <h4 class="text-blue-400 font-bold text-sm mb-2">Kepujian (15.0 - 18.9)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Persediaan:</b> Pasang blok hampir betul. <b>Ke Garisan:</b> Melangkah kurang bersedia, kesalahan minima, bantuan minima. <b>Sedia:</b> Punggung aras kepala, berat depan sederhana. <b>Mula:</b> Tindak balas agak pantas, koordinasi agak betul. <b>Penamat:</b> Torso mendahului, dipping tangan dihayun, agak kekalkan kepantasan.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-orange-500">
+                            <h4 class="text-orange-400 font-bold text-sm mb-2">Sederhana (13.0 - 14.9)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Persediaan:</b> Kesalahan kecil pada blok. <b>Ke Garisan:</b> Lambat melangkah, dekam dengan bantuan. <b>Sedia:</b> Teknik perlakuan kurang betul, punggung rendah. <b>Mula:</b> Tindak balas kurang pantas, koordinasi kurang sempurna. <b>Penamat:</b> Melintasi garisan, dipping tanpa hayunan tangan, tidak kekalkan kepantasan.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-red-500">
+                            <h4 class="text-red-400 font-bold text-sm mb-2">Lemah (< 13.0)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Persediaan:</b> Pasang blok dengan bantuan. <b>Ke Garisan:</b> Teragak-agak, bantuan penuh. <b>Sedia:</b> Banyak kelemahan teknik permulaan. <b>Mula:</b> Tindak balas lambat, tiada tolakan kaki. <b>Penamat:</b> Berhenti serta-merta, tiada dipping, banyak kelemahan.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lontar Peluru -->
+                <section>
+                    <h3 class="text-xl font-bold text-purple-400 mb-6 flex items-center gap-2">
+                        <span class="w-2 h-8 bg-purple-400 rounded-full"></span> AMALI LONTAR PELURU (25%)
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="rubric-category border-emerald-500">
+                            <h4 class="text-emerald-400 font-bold text-sm mb-2">Amat Cemerlang (23.0 - 25.0)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Pegangan:</b> Tidak sentuh tapak tangan, pangkal jari. <b>Sedia:</b> Sisi leher bawah telinga, membelakangi kawasan. <b>Lungsuran:</b> Kaki serentak, pantas dan licin, betul dan tepat. <b>Kilasan:</b> Pinggul pusing serentak kilasan badan. <b>Lontaran:</b> Tolak lutut hingga badan melentik, pindah berat, ikut lajak tepat. <b>Pulihan:</b> Kaki kanan bawa ke depan, imbangan stabil.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-cyan-500">
+                            <h4 class="text-cyan-400 font-bold text-sm mb-2">Cemerlang (19.0 - 22.9)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Pegangan:</b> Betul. <b>Sedia:</b> Betul dan tepat. <b>Lungsuran:</b> Kurang pantas tetapi licin, teknik betul. <b>Kilasan:</b> Bahu & tangan kanan hala belakang. <b>Lontaran:</b> Pergerakan mula bahu, tolak lutut, ikut lajak betul. <b>Pulihan:</b> Kaki kanan bawa ke depan, perlu diperbaiki.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-blue-500">
+                            <h4 class="text-blue-400 font-bold text-sm mb-2">Kepujian (15.0 - 18.9)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Pegangan:</b> Betul. <b>Sedia:</b> Tidak sentuh sisi leher, perlu dibaiki. <b>Lungsuran:</b> Kurang pantas, teknik perlu dibaiki. <b>Kilasan:</b> Pinggul kurang pusing. <b>Lontaran:</b> Kurang menolak & lurus lutut, teknik perlu dibaiki. <b>Pulihan:</b> Kurang berjaya imbangi badan, perlu diperbaiki.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-orange-500">
+                            <h4 class="text-orange-400 font-bold text-sm mb-2">Sederhana (13.0 - 14.9)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Pegangan:</b> Tidak memegang di pangkal jari. <b>Sedia:</b> Teknik persediaan salah. <b>Lungsuran:</b> Tidak melungsur serentak, teknik salah. <b>Kilasan:</b> Pinggul tidak pusing. <b>Lontaran:</b> Teknik lontaran salah. <b>Pulihan:</b> Imbang badan dari terjatuh, teknik baik.
+                            </p>
+                        </div>
+                        <div class="rubric-category border-red-500">
+                            <h4 class="text-red-400 font-bold text-sm mb-2">Lemah (< 13.0)</h4>
+                            <p class="text-xs text-white/60 leading-relaxed">
+                                <b>Pegangan:</b> Salah. <b>Sedia:</b> Salah. <b>Lungsuran:</b> Salah. <b>Kilasan:</b> Salah. <b>Lontaran:</b> Salah. <b>Pulihan:</b> Teknik pulihan cemerlang dalam mengawal imbangan.
+                            </p>
+                        </div>
+                    </div>
+                </section>
             </div>
+            <div class="h-10"></div>
         </div>
     </div>
 
-    <!-- Scoring Modal (Mobile Drawer Style) -->
+    <!-- Scoring Modal -->
     <div id="scoringModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-md hidden no-print">
         <div class="glass-card w-full max-w-xl p-6 md:p-8 border-cyan-400/20 rounded-t-[30px] md:rounded-[24px] shadow-2xl">
             <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 md:hidden"></div>
@@ -230,7 +319,7 @@
             <button id="btnSave" onclick="saveMarkah()" class="w-full mt-10 py-5 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(0,242,255,0.2)]">
                 Hantar Markah
             </button>
-            <div class="h-6 md:hidden"></div> <!-- Safe area for mobile home bar -->
+            <div class="h-6 md:hidden"></div>
         </div>
     </div>
 
@@ -325,7 +414,6 @@
             window.currentRole = role;
             document.getElementById('currentRoleDisplay').innerText = `Sessi: ${role}`;
             
-            // Handle buttons UI
             ['roleBtn1', 'roleBtn2', 'roleBtnAdmin'].forEach(id => {
                 const btn = document.getElementById(id);
                 const roleMap = {'roleBtn1':'Penilai 1', 'roleBtn2':'Penilai 2', 'roleBtnAdmin':'Admin'};
@@ -456,11 +544,11 @@
 
         window.getCategory = (val) => {
             val = parseFloat(val);
-            if (val >= 23.0) return { label: 'Cemerlang', color: '#10b981' };
-            if (val >= 19.0) return { label: 'Kepujian', color: '#3b82f6' };
-            if (val >= 15.0) return { label: 'Sederhana', color: '#f59e0b' };
-            if (val >= 13.0) return { label: 'Lemah', color: '#ef4444' };
-            return { label: 'Gagal', color: '#7f1d1d' };
+            if (val >= 23.0) return { label: 'Amat Cemerlang', color: '#10b981' };
+            if (val >= 19.0) return { label: 'Cemerlang', color: '#3b82f6' };
+            if (val >= 15.0) return { label: 'Kepujian', color: '#f59e0b' };
+            if (val >= 13.0) return { label: 'Sederhana', color: '#ef4444' };
+            return { label: 'Lemah', color: '#7f1d1d' };
         };
         window.updateScore = (type) => {
             const val = document.getElementById(`val${type}`).innerText = parseFloat(document.getElementById(`slider${type}`).value).toFixed(1);
