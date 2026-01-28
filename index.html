@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AXON // Sistem Penilaian Bersepadu</title>
+    <title>AXON // Sistem Pentaksiran Amali</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -26,10 +26,11 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             .glass-card { border: none !important; background: none !important; backdrop-filter: none !important; }
-            table { border-collapse: collapse; width: 100%; font-size: 10px; }
+            table { border-collapse: collapse; width: 100%; font-size: 10px; margin-bottom: 30px; }
             th, td { border: 1px solid #000 !important; padding: 6px !important; color: black !important; text-align: center; }
             .text-left { text-align: left !important; }
-            .page-break { page-break-after: always; }
+            .sig-box { margin-top: 50px; display: flex; justify-content: space-between; font-size: 10px; }
+            .sig-field { text-align: center; width: 30%; }
         }
         .print-only { display: none; }
     </style>
@@ -39,7 +40,7 @@
     <div class="max-w-6xl mx-auto no-print">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight text-white uppercase">Axon <span class="text-cyan-400">Elite</span></h1>
+                <h1 class="text-3xl font-bold tracking-tight text-white uppercase">Penilaian Amali Olahraga <span class="text-cyan-400"> 2 Penguji</span></h1>
                 <span id="syncStatus" class="text-[9px] font-bold text-yellow-400 uppercase tracking-widest italic">Syncing...</span>
             </div>
 
@@ -62,8 +63,8 @@
 
                 <div class="mb-8 p-4 bg-white/5 rounded-2xl">
                     <label class="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2 block">Pilih Kelas</label>
-                    <select id="classFilter" onchange="handleClassFilter(this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white">
-                        <option value="Semua">Semua Pelajar</option>
+                    <select id="adminClassFilter" onchange="handleClassFilter(this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white">
+                        <option value="Semua">Semua Pelajar (Keseluruhan)</option>
                     </select>
                 </div>
 
@@ -88,18 +89,26 @@
             <div class="px-3 py-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 inline-block mb-4">
                 <span class="text-[10px] font-bold text-cyan-400 mono uppercase" id="currentRoleDisplay">Sessi: Penilai 1</span>
             </div>
+
+            <div class="glass-card p-6 border-cyan-400/20 bg-cyan-400/5">
+                <label class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-3 block">Sila Pilih Kelas Terlebih Dahulu:</label>
+                <select id="penilaiClassFilter" onchange="handlePenilaiClass(this.value)" class="w-full bg-slate-900 border border-cyan-400/30 rounded-xl px-4 py-4 text-md font-bold text-white shadow-lg">
+                    <option value="">-- Pilih Kelas --</option>
+                </select>
+            </div>
+
             <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
     </div>
 
     <div id="printReport" class="print-only"></div>
 
-    <div id="scoringModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-xl hidden">
+    <div id="scoringModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/95 backdrop-blur-xl hidden">
         <div class="glass-card w-full max-w-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto border-white/10 rounded-t-[32px] md:rounded-[24px]">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 id="modalStudentName" class="text-2xl font-bold text-white">Nama Pelajar</h2>
-                    <div id="descTotal" class="text-[10px] font-bold mt-1 uppercase italic tracking-widest text-cyan-400">Sila gerakkan slider</div>
+                    <div id="descTotal" class="text-[10px] font-bold mt-1 uppercase italic tracking-widest text-cyan-400">Gerakkan Slider</div>
                 </div>
                 <button onclick="closeModal()" class="text-white/40 text-3xl">&times;</button>
             </div>
@@ -115,8 +124,8 @@
 
                 <div id="criteriaDetails" class="space-y-4"></div>
 
-                <button id="btnSave" onclick="saveMarkah()" class="w-full py-5 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest text-xs active:scale-95 transition-all shadow-xl">
-                    Simpan Markah
+                <button id="btnSave" onclick="saveMarkah()" class="w-full py-5 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest text-xs active:scale-95 transition-all">
+                    Hantar Markah Live
                 </button>
             </div>
         </div>
@@ -124,7 +133,7 @@
 
     <script>
         const scriptURL = "https://script.google.com/macros/s/AKfycbzVzaPdACxnvKJDRG5cqKDZBhLu6V8z3g3N4MT55scDGIAgU-r3ekjMAt_Zj4x8O75lBg/exec"; 
-        let students = [], liveMarks = {}, selectedClass = "Semua";
+        let students = [], liveMarks = {}, selectedClass = "";
         window.currentRole = 'Penilai 1';
 
         const skema = [
@@ -143,21 +152,31 @@
                 document.getElementById('syncStatus').innerText = "LIVE";
                 initFilters();
                 renderView();
-                preparePrintReport();
             } catch (e) { document.getElementById('syncStatus').innerText = "OFFLINE"; }
         }
 
         function initFilters() {
-            const filter = document.getElementById('classFilter');
             const classes = [...new Set(students.map(s => s.class))].sort();
-            filter.innerHTML = '<option value="Semua">Semua Pelajar</option>' + 
+            
+            // Dashboard Filter
+            const dFilter = document.getElementById('adminClassFilter');
+            dFilter.innerHTML = '<option value="Semua">Semua Pelajar (Keseluruhan)</option>' + 
                 classes.map(c => `<option value="${c}">Kelas: ${c}</option>`).join('');
-            filter.value = selectedClass;
+
+            // Penilai Filter
+            const pFilter = document.getElementById('penilaiClassFilter');
+            pFilter.innerHTML = '<option value="">-- Pilih Kelas --</option>' + 
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function handlePenilaiClass(val) {
+            selectedClass = val;
+            renderStudentList();
         }
 
         function handleClassFilter(val) {
             selectedClass = val;
-            renderView();
+            renderAdminTable();
             preparePrintReport();
         }
 
@@ -168,11 +187,13 @@
 
         function renderStudentList() {
             const container = document.getElementById('studentList');
-            const filtered = selectedClass === "Semua" ? students : students.filter(s => s.class === selectedClass);
+            if (!selectedClass) { container.innerHTML = ""; return; }
+            
+            const filtered = students.filter(s => s.class === selectedClass);
             container.innerHTML = filtered.map(s => {
                 const hasMark = liveMarks[s.id] && liveMarks[s.id][window.currentRole];
                 return `<div onclick="openScoring('${s.id}')" class="glass-card p-5 cursor-pointer hover:border-cyan-400 flex justify-between items-center transition-all">
-                    <div><p class="text-[9px] text-white/20 mono uppercase">${s.class}</p><h3 class="font-bold text-white text-sm">${s.name}</h3></div>
+                    <div><h3 class="font-bold text-white text-sm">${s.name}</h3></div>
                     <div class="status-indicator ${hasMark ? 'completed' : 'pending'}"></div>
                 </div>`;
             }).join('');
@@ -188,9 +209,8 @@
                 const p2 = (m['Penilai 2'] ? m['Penilai 2'].pecut : 0);
                 const final = (p1 + p2) / 2;
                 const cat = window.getCategory(final);
-                
                 return `<tr>
-                    <td class="p-4"><div class="font-bold text-xs">${s.name}</div><div class="text-[9px] text-white/20">${s.class}</div></td>
+                    <td class="p-4"><div class="font-bold text-xs text-white">${s.name}</div><div class="text-[9px] text-white/20">${s.class}</div></td>
                     <td class="p-4 text-center mono text-xs text-white/40">${p1.toFixed(1)}</td>
                     <td class="p-4 text-center mono text-xs text-white/40">${p2.toFixed(1)}</td>
                     <td class="p-4 text-center font-bold text-cyan-400 mono text-xs">${final.toFixed(2)}</td>
@@ -208,21 +228,14 @@
                 const p1 = (m['Penilai 1'] ? m['Penilai 1'].pecut : 0);
                 const p2 = (m['Penilai 2'] ? m['Penilai 2'].pecut : 0);
                 const final = (p1 + p2) / 2;
-                return `<tr>
-                    <td class="text-left">${idx+1}. ${s.name}</td>
-                    <td>${s.class}</td>
-                    <td>${p1.toFixed(1)}</td>
-                    <td>${p2.toFixed(1)}</td>
-                    <td><strong>${final.toFixed(2)}</strong></td>
-                    <td>${window.getCategory(final).label}</td>
-                </tr>`;
+                return `<tr><td class="text-left">${idx+1}. ${s.name}</td><td>${s.class}</td><td>${p1.toFixed(1)}</td><td>${p2.toFixed(1)}</td><td><strong>${final.toFixed(2)}</strong></td><td>${window.getCategory(final).label}</td></tr>`;
             }).join('');
 
             container.innerHTML = `
                 <div class="p-10">
                     <h1 style="text-align:center; font-size:16px;">LAPORAN PENTAKSIRAN AMALI OLAHRAGA</h1>
-                    <p style="text-align:center; font-size:12px;">Kelas: ${selectedClass}</p>
-                    <table border="1" style="width:100%; margin-top:20px;">
+                    <p style="text-align:center; font-size:12px; margin-bottom:30px;">Kelas: ${selectedClass}</p>
+                    <table border="1">
                         <thead>
                             <tr style="background:#f2f2f2;">
                                 <th class="text-left">Nama Pelajar</th>
@@ -235,6 +248,11 @@
                         </thead>
                         <tbody>${tableRows}</tbody>
                     </table>
+                    <div class="sig-box">
+                        <div class="sig-field"><br><br>__________________________<br><strong>PENILAI 1</strong></div>
+                        <div class="sig-field"><br><br>__________________________<br><strong>PENILAI 2</strong></div>
+                        <div class="sig-field"><p style="font-size:8px;">Disahkan oleh:</p><br>__________________________<br><strong>KETUA UNIT</strong></div>
+                    </div>
                 </div>`;
         }
 
@@ -252,7 +270,7 @@
                 const percent = (score / item.weight) * 100;
                 html += `<div class="space-y-1">
                     <div class="flex justify-between text-[9px] font-bold uppercase text-white/40"><span>${item.name}</span><span>${score.toFixed(1)} / ${item.weight}</span></div>
-                    <div class="h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-cyan-400 transition-all" style="width:${percent}%"></div></div>
+                    <div class="h-1 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-cyan-400" style="width:${percent}%"></div></div>
                 </div>`;
             });
             document.getElementById('criteriaDetails').innerHTML = html;
@@ -269,16 +287,18 @@
         window.switchRole = (role) => {
             window.currentRole = role;
             document.getElementById('currentRoleDisplay').innerText = `Sessi: ${role}`;
-            
-            // Fix butang (Penilai 1, 2, Admin)
             document.getElementById('roleBtn1').className = role === 'Penilai 1' ? 'px-6 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black' : 'px-6 py-2 rounded-xl text-xs font-bold text-white/50';
             document.getElementById('roleBtn2').className = role === 'Penilai 2' ? 'px-6 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black' : 'px-6 py-2 rounded-xl text-xs font-bold text-white/50';
             document.getElementById('roleBtnAdmin').className = role === 'Admin' ? 'px-6 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black' : 'px-6 py-2 rounded-xl text-xs font-bold text-white/50';
             
             document.getElementById('penilaiView').classList.toggle('hidden-section', role === 'Admin');
             document.getElementById('adminView').classList.toggle('hidden-section', role !== 'Admin');
+            
+            // Reset pilihan kelas bila tukar role
+            selectedClass = "";
+            document.getElementById('penilaiClassFilter').value = "";
             renderView();
-        };
+        }
 
         function openScoring(id) {
             window.activeStudentId = id;
@@ -291,7 +311,6 @@
         }
 
         window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
-        
         window.saveMarkah = async () => {
             const pecut = parseFloat(document.getElementById('mainSlider').value);
             const btn = document.getElementById('btnSave');
