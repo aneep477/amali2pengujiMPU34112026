@@ -39,7 +39,7 @@
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
-            height: 40px; /* Touch friendly height */
+            height: 40px;
             background: transparent;
         }
 
@@ -75,18 +75,12 @@
 
         .hidden-section { display: none; }
 
-        /* Custom Dropdown for Mobile */
         select {
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 0.75rem center;
             background-size: 1em;
-        }
-
-        /* Prevent unwanted horizontal scroll */
-        .overflow-x-auto {
-            -webkit-overflow-scrolling: touch;
         }
 
         @media print {
@@ -101,11 +95,15 @@
 
         .print-only { display: none; }
 
-        /* Rubrik Styling */
         .rubric-category {
             border-left: 4px solid;
             padding-left: 1rem;
             margin-bottom: 1.5rem;
+        }
+
+        /* Neo-Gradient Animation for dynamic labels */
+        .desc-text {
+            transition: all 0.3s ease;
         }
     </style>
 </head>
@@ -115,13 +113,12 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12 gap-6">
             <div class="w-full md:w-auto">
                 <div class="flex items-center gap-3 mb-2">
-                    <span id="syncStatus" class="text-[9px] tracking-[0.3em] font-bold text-yellow-400 uppercase italic">Sycn...</span>
+                    <span id="syncStatus" class="text-[9px] tracking-[0.3em] font-bold text-yellow-400 uppercase italic">Sync...</span>
                     <div class="h-1 w-12 bg-white/10 rounded"></div>
                 </div>
                 <h1 class="text-3xl md:text-4xl font-bold tracking-tight">PENILAIAN AMALI OLAHRAGA <span class="text-white/40 font-light">//</span> LIVE</h1>
             </div>
 
-            <!-- Role Switcher (Scrollable on Mobile) -->
             <div class="flex overflow-x-auto w-full md:w-auto pb-2 md:pb-0 no-scrollbar gap-2">
                 <div class="flex gap-2 p-1 glass-card border-white/5 bg-white/5 min-w-max">
                     <button onclick="switchRole('Penilai 1')" id="roleBtn1" class="px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-bold transition-all bg-cyan-500 text-black">P1</button>
@@ -147,14 +144,12 @@
             </div>
         </div>
 
-        <!-- Student Grid -->
         <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             <div class="col-span-full py-20 text-center text-white/20 mono uppercase tracking-widest text-xs animate-pulse">
                 Menyambung ke Google Sheets...
             </div>
         </div>
 
-        <!-- Dashboard View -->
         <div id="adminView" class="hidden-section space-y-6">
             <div class="glass-card p-4 md:p-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -165,7 +160,6 @@
                     </div>
                 </div>
 
-                <!-- Admin Table (Responsive) -->
                 <div class="overflow-x-auto -mx-4 md:mx-0">
                     <table class="w-full text-left min-w-[600px] md:min-w-0">
                         <thead class="border-b border-white/10">
@@ -184,16 +178,14 @@
         </div>
     </div>
 
-    <!-- Rubrik Modal -->
     <div id="rubrikModal" class="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-xl hidden">
         <div class="glass-card w-full max-w-5xl p-6 md:p-8 max-h-[85vh] overflow-y-auto border-cyan-400/20 rounded-t-[30px] md:rounded-[24px]">
             <div class="flex justify-between items-center mb-8 sticky top-0 bg-slate-900/80 py-2 backdrop-blur-md z-10">
-                <h2 class="text-2xl font-bold neo-gradient">Rujukan Rubrik Pentaksiran</h2>
-                <button onclick="toggleRubrik()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white/40">&times;</button>
+                <h2 class="text-2xl font-bold text-white">Rujukan Rubrik Pentaksiran</h2>
+                <button onclick="toggleRubrik()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white/40 text-2xl">&times;</button>
             </div>
             
             <div class="space-y-12">
-                <!-- Julat Markah -->
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px] font-bold uppercase mono">
                     <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Amat Cemerlang<br>23.0 - 25.0</div>
                     <div class="p-2 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-400/30">Cemerlang<br>19.0 - 22.9</div>
@@ -202,82 +194,18 @@
                     <div class="p-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30">Lemah<br>< 13.0</div>
                 </div>
 
-                <!-- Lari Pecut -->
                 <section>
                     <h3 class="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
                         <span class="w-2 h-8 bg-cyan-400 rounded-full"></span> AMALI LARI PECUT (25%)
                     </h3>
-                    
                     <div class="space-y-6">
                         <div class="rubric-category border-emerald-500">
                             <h4 class="text-emerald-400 font-bold text-sm mb-2">Amat Cemerlang (23.0 - 25.0)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Persediaan:</b> Pasang blok tanpa bantuan. <b>Ke Garisan:</b> Melangkah pantas, posisi dekam tepat, tangan seluas bahu. <b>Sedia:</b> Punggung tinggi, berat badan ke hadapan, kepala relaks. <b>Mula:</b> Tindak balas amat pantas, tolakan kaki maksimum, koordinasi sempurna tanpa bantuan. <b>Penamat:</b> Torso mendahului, dipping tekal, kekalkan kepantasan tanpa bantuan.
-                            </p>
+                            <p class="text-xs text-white/60 leading-relaxed">Persediaan blok tanpa bantuan, posisi dekam tepat, tindak balas amat pantas, koordinasi sempurna, dipping tekal.</p>
                         </div>
                         <div class="rubric-category border-cyan-500">
                             <h4 class="text-cyan-400 font-bold text-sm mb-2">Cemerlang (19.0 - 22.9)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Persediaan:</b> Pasang blok teknik betul. <b>Ke Garisan:</b> Melangkah setelah isyarat, posisi dekam & bahu selari. <b>Sedia:</b> Punggung tidak begitu tinggi, berat ke hadapan. <b>Mula:</b> Tindak balas pantas, tolakan kaki maksimum, bantuan minima. <b>Penamat:</b> Torso mendahului, dipping tangan ayun belakang, kekalkan imbangan.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-blue-500">
-                            <h4 class="text-blue-400 font-bold text-sm mb-2">Kepujian (15.0 - 18.9)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Persediaan:</b> Pasang blok hampir betul. <b>Ke Garisan:</b> Melangkah kurang bersedia, kesalahan minima, bantuan minima. <b>Sedia:</b> Punggung aras kepala, berat depan sederhana. <b>Mula:</b> Tindak balas agak pantas, koordinasi agak betul. <b>Penamat:</b> Torso mendahului, dipping tangan dihayun, agak kekalkan kepantasan.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-orange-500">
-                            <h4 class="text-orange-400 font-bold text-sm mb-2">Sederhana (13.0 - 14.9)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Persediaan:</b> Kesalahan kecil pada blok. <b>Ke Garisan:</b> Lambat melangkah, dekam dengan bantuan. <b>Sedia:</b> Teknik perlakuan kurang betul, punggung rendah. <b>Mula:</b> Tindak balas kurang pantas, koordinasi kurang sempurna. <b>Penamat:</b> Melintasi garisan, dipping tanpa hayunan tangan, tidak kekalkan kepantasan.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-red-500">
-                            <h4 class="text-red-400 font-bold text-sm mb-2">Lemah (< 13.0)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Persediaan:</b> Pasang blok dengan bantuan. <b>Ke Garisan:</b> Teragak-agak, bantuan penuh. <b>Sedia:</b> Banyak kelemahan teknik permulaan. <b>Mula:</b> Tindak balas lambat, tiada tolakan kaki. <b>Penamat:</b> Berhenti serta-merta, tiada dipping, banyak kelemahan.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Lontar Peluru -->
-                <section>
-                    <h3 class="text-xl font-bold text-purple-400 mb-6 flex items-center gap-2">
-                        <span class="w-2 h-8 bg-purple-400 rounded-full"></span> AMALI LONTAR PELURU (25%)
-                    </h3>
-                    
-                    <div class="space-y-6">
-                        <div class="rubric-category border-emerald-500">
-                            <h4 class="text-emerald-400 font-bold text-sm mb-2">Amat Cemerlang (23.0 - 25.0)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Pegangan:</b> Tidak sentuh tapak tangan, pangkal jari. <b>Sedia:</b> Sisi leher bawah telinga, membelakangi kawasan. <b>Lungsuran:</b> Kaki serentak, pantas dan licin, betul dan tepat. <b>Kilasan:</b> Pinggul pusing serentak kilasan badan. <b>Lontaran:</b> Tolak lutut hingga badan melentik, pindah berat, ikut lajak tepat. <b>Pulihan:</b> Kaki kanan bawa ke depan, imbangan stabil.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-cyan-500">
-                            <h4 class="text-cyan-400 font-bold text-sm mb-2">Cemerlang (19.0 - 22.9)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Pegangan:</b> Betul. <b>Sedia:</b> Betul dan tepat. <b>Lungsuran:</b> Kurang pantas tetapi licin, teknik betul. <b>Kilasan:</b> Bahu & tangan kanan hala belakang. <b>Lontaran:</b> Pergerakan mula bahu, tolak lutut, ikut lajak betul. <b>Pulihan:</b> Kaki kanan bawa ke depan, perlu diperbaiki.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-blue-500">
-                            <h4 class="text-blue-400 font-bold text-sm mb-2">Kepujian (15.0 - 18.9)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Pegangan:</b> Betul. <b>Sedia:</b> Tidak sentuh sisi leher, perlu dibaiki. <b>Lungsuran:</b> Kurang pantas, teknik perlu dibaiki. <b>Kilasan:</b> Pinggul kurang pusing. <b>Lontaran:</b> Kurang menolak & lurus lutut, teknik perlu dibaiki. <b>Pulihan:</b> Kurang berjaya imbangi badan, perlu diperbaiki.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-orange-500">
-                            <h4 class="text-orange-400 font-bold text-sm mb-2">Sederhana (13.0 - 14.9)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Pegangan:</b> Tidak memegang di pangkal jari. <b>Sedia:</b> Teknik persediaan salah. <b>Lungsuran:</b> Tidak melungsur serentak, teknik salah. <b>Kilasan:</b> Pinggul tidak pusing. <b>Lontaran:</b> Teknik lontaran salah. <b>Pulihan:</b> Imbang badan dari terjatuh, teknik baik.
-                            </p>
-                        </div>
-                        <div class="rubric-category border-red-500">
-                            <h4 class="text-red-400 font-bold text-sm mb-2">Lemah (< 13.0)</h4>
-                            <p class="text-xs text-white/60 leading-relaxed">
-                                <b>Pegangan:</b> Salah. <b>Sedia:</b> Salah. <b>Lungsuran:</b> Salah. <b>Kilasan:</b> Salah. <b>Lontaran:</b> Salah. <b>Pulihan:</b> Teknik pulihan cemerlang dalam mengawal imbangan.
-                            </p>
+                            <p class="text-xs text-white/60 leading-relaxed">Persediaan blok betul, posisi dekam & bahu selari, tindak balas pantas, tolakan kaki maksimum, bantuan minima.</p>
                         </div>
                     </div>
                 </section>
@@ -286,7 +214,6 @@
         </div>
     </div>
 
-    <!-- Scoring Modal -->
     <div id="scoringModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-md hidden no-print">
         <div class="glass-card w-full max-w-xl p-6 md:p-8 border-cyan-400/20 rounded-t-[30px] md:rounded-[24px] shadow-2xl">
             <div class="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 md:hidden"></div>
@@ -295,22 +222,28 @@
                     <h2 id="modalStudentName" class="text-xl md:text-2xl font-bold mb-1">Nama Pelajar</h2>
                     <p id="modalStudentID" class="text-white/40 mono text-[10px] uppercase">ID: 0000</p>
                 </div>
-                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/40">&times;</button>
+                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/40 text-2xl">&times;</button>
             </div>
             
-            <div class="space-y-10">
+            <div class="space-y-12">
                 <div class="space-y-4">
                     <div class="flex justify-between items-end">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60">1. Lari Pecut</label>
-                        <span id="valPecut" class="text-3xl font-bold mono text-cyan-400">0.0</span>
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/60">1. Lari Pecut</label>
+                            <div id="descPecut" class="desc-text text-[11px] font-bold mt-1 uppercase italic tracking-wider">Sila gerakkan slider</div>
+                        </div>
+                        <span id="valPecut" class="text-4xl font-bold mono text-cyan-400">0.0</span>
                     </div>
                     <input type="range" id="sliderPecut" min="0" max="25" step="0.1" value="0" oninput="updateScore('Pecut')">
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex justify-between items-end">
-                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/60">2. Lontar Peluru</label>
-                        <span id="valLontar" class="text-3xl font-bold mono text-purple-400">0.0</span>
+                        <div>
+                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/60">2. Lontar Peluru</label>
+                            <div id="descLontar" class="desc-text text-[11px] font-bold mt-1 uppercase italic tracking-wider">Sila gerakkan slider</div>
+                        </div>
+                        <span id="valLontar" class="text-4xl font-bold mono text-purple-400">0.0</span>
                     </div>
                     <input type="range" id="sliderLontar" min="0" max="25" step="0.1" value="0" oninput="updateScore('Lontar')">
                 </div>
@@ -525,19 +458,14 @@
                     return `<tr><td>${s.name}</td><td align="center">${p1Avg.toFixed(2)}</td><td align="center">${p2Avg.toFixed(2)}</td><td align="center"><b>${final.toFixed(2)}</b></td><td align="center">${window.getCategory(final).label}</td></tr>`;
                 }).join('');
                 pageDiv.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="text-align: center; margin-bottom: 30px; font-family: sans-serif;">
                         <h1 style="font-size: 18px; text-transform: uppercase;">Laporan Pentaksiran Pelajar</h1>
                         <h2 style="font-size: 14px;">Kelas: ${cls}</h2>
                     </div>
-                    <table border="1">
+                    <table border="1" style="width:100%; border-collapse:collapse; font-family: sans-serif; font-size:12px;">
                         <thead><tr style="background:#f3f4f6"><th>Nama Pelajar</th><th>P1 (Avg)</th><th>P2 (Avg)</th><th>Markah Akhir</th><th>Kategori</th></tr></thead>
                         <tbody>${tableRows}</tbody>
-                    </table>
-                    <div style="margin-top:50px; display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; font-size:10px;">
-                        <div style="text-align:center"><br><br>_________________<br><b>Penilai 1</b></div>
-                        <div style="text-align:center"><br><br>_________________<br><b>Penilai 2</b></div>
-                        <div style="text-align:center"><br><br>_________________<br><b>Ketua Unit Kokurikulum</b></div>
-                    </div>`;
+                    </table>`;
                 reportContainer.appendChild(pageDiv);
             });
         }
@@ -550,9 +478,22 @@
             if (val >= 13.0) return { label: 'Sederhana', color: '#ef4444' };
             return { label: 'Lemah', color: '#7f1d1d' };
         };
+
         window.updateScore = (type) => {
-            const val = document.getElementById(`val${type}`).innerText = parseFloat(document.getElementById(`slider${type}`).value).toFixed(1);
+            const slider = document.getElementById(`slider${type}`);
+            const valDisplay = document.getElementById(`val${type}`);
+            const descDisplay = document.getElementById(`desc${type}`);
+            
+            const value = parseFloat(slider.value);
+            valDisplay.innerText = value.toFixed(1);
+
+            const cat = window.getCategory(value);
+            descDisplay.innerText = cat.label;
+            descDisplay.style.color = cat.color;
+            valDisplay.style.color = cat.color;
+            valDisplay.style.textShadow = `0 0 15px ${cat.color}66`;
         };
+
         window.toggleRubrik = () => document.getElementById('rubrikModal').classList.toggle('hidden');
         window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
 
