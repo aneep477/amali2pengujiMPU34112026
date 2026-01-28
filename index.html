@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AXON // Dashboard Prestasi</title>
+    <title>AXON // Sistem Penilaian Bersepadu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -14,10 +14,24 @@
         input[type=range] { -webkit-appearance: none; width: 100%; height: 10px; background: rgba(255,255,255,0.05); border-radius: 10px; outline: none; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid white; box-shadow: 0 0 20px var(--accent); }
 
-        .desc-text { transition: all 0.3s ease; }
         .hidden-section { display: none; }
+        .status-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .completed { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .pending { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
         
         select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1em; }
+        
+        @media print {
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .glass-card { border: none !important; background: none !important; backdrop-filter: none !important; }
+            table { border-collapse: collapse; width: 100%; font-size: 10px; }
+            th, td { border: 1px solid #000 !important; padding: 6px !important; color: black !important; text-align: center; }
+            .text-left { text-align: left !important; }
+            .page-break { page-break-after: always; }
+        }
+        .print-only { display: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -25,11 +39,8 @@
     <div class="max-w-6xl mx-auto no-print">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
             <div>
-                <div class="flex items-center gap-3 mb-2">
-                    <span id="syncStatus" class="text-[9px] tracking-[0.3em] font-bold text-yellow-400 uppercase italic">Syncing...</span>
-                    <div class="h-1 w-12 bg-white/10 rounded"></div>
-                </div>
-                <h1 class="text-3xl font-bold tracking-tight text-white uppercase">Penilaian Amali Olahraga <span class="text-cyan-400">2 Penguji</span></h1>
+                <h1 class="text-3xl font-bold tracking-tight text-white uppercase">Axon <span class="text-cyan-400">Elite</span></h1>
+                <span id="syncStatus" class="text-[9px] font-bold text-yellow-400 uppercase tracking-widest italic">Syncing...</span>
             </div>
 
             <div class="flex gap-2 p-1 glass-card bg-white/5">
@@ -41,17 +52,17 @@
 
         <div id="adminView" class="hidden-section space-y-6">
             <div class="glass-card p-6 md:p-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <h2 class="text-2xl font-bold text-white tracking-tight">Prestasi Keseluruhan</h2>
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <button onclick="fetchMarks()" class="flex-grow bg-white/5 text-cyan-400 px-4 py-2 rounded-xl text-[10px] font-bold border border-cyan-400/20">Refresh 🔄</button>
-                        <button onclick="window.print()" class="flex-grow bg-white/5 text-white px-4 py-2 rounded-xl text-[10px] font-bold border border-white/10">Cetak PDF</button>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Prestasi Keseluruhan</h2>
+                    <div class="flex gap-2">
+                        <button onclick="fetchMarks()" class="bg-white/5 text-cyan-400 px-4 py-2 rounded-xl text-[10px] font-bold border border-cyan-400/20">🔄 Refresh</button>
+                        <button onclick="window.print()" class="bg-white/5 text-white px-4 py-2 rounded-xl text-[10px] font-bold border border-white/10">Cetak Laporan</button>
                     </div>
                 </div>
 
-                <div class="mb-8 p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <label class="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Tapis Mengikut Kumpulan / Kelas</label>
-                    <select id="classFilter" onchange="handleClassFilter(this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-cyan-400 transition-all">
+                <div class="mb-8 p-4 bg-white/5 rounded-2xl">
+                    <label class="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2 block">Pilih Kelas</label>
+                    <select id="classFilter" onchange="handleClassFilter(this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white">
                         <option value="Semua">Semua Pelajar</option>
                     </select>
                 </div>
@@ -60,15 +71,14 @@
                     <table class="w-full text-left">
                         <thead class="border-b border-white/10">
                             <tr class="text-white/40 text-[10px] uppercase font-bold mono">
-                                <th class="p-4">Atlet / Unit</th>
-                                <th class="p-4 text-center">P1 (Avg)</th>
-                                <th class="p-4 text-center">P2 (Avg)</th>
-                                <th class="p-4 text-center">Skor Akhir</th>
-                                <th class="p-4 text-right">Tahap</th>
+                                <th class="p-4">Nama Pelajar / Kelas</th>
+                                <th class="p-4 text-center">Penilai 1</th>
+                                <th class="p-4 text-center">Penilai 2</th>
+                                <th class="p-4 text-center">Purata (Final)</th>
+                                <th class="p-4 text-right">Kategori</th>
                             </tr>
                         </thead>
-                        <tbody id="adminTableBody" class="divide-y divide-white/5 text-white/90">
-                            </tbody>
+                        <tbody id="adminTableBody" class="divide-y divide-white/5 text-white/90"></tbody>
                     </table>
                 </div>
             </div>
@@ -78,17 +88,18 @@
             <div class="px-3 py-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 inline-block mb-4">
                 <span class="text-[10px] font-bold text-cyan-400 mono uppercase" id="currentRoleDisplay">Sessi: Penilai 1</span>
             </div>
-            <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                </div>
+            <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
     </div>
+
+    <div id="printReport" class="print-only"></div>
 
     <div id="scoringModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/90 backdrop-blur-xl hidden">
         <div class="glass-card w-full max-w-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto border-white/10 rounded-t-[32px] md:rounded-[24px]">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 id="modalStudentName" class="text-2xl font-bold text-white">Nama Pelajar</h2>
-                    <div id="descTotal" class="desc-text text-[10px] font-bold mt-1 uppercase italic tracking-widest text-cyan-400">Sila gerakkan slider</div>
+                    <div id="descTotal" class="text-[10px] font-bold mt-1 uppercase italic tracking-widest text-cyan-400">Sila gerakkan slider</div>
                 </div>
                 <button onclick="closeModal()" class="text-white/40 text-3xl">&times;</button>
             </div>
@@ -102,10 +113,9 @@
                     <input type="range" id="mainSlider" min="0" max="25" step="0.1" value="0" oninput="updateScore(this.value)" class="w-full">
                 </div>
 
-                <div id="criteriaDetails" class="space-y-4">
-                    </div>
+                <div id="criteriaDetails" class="space-y-4"></div>
 
-                <button id="btnSave" onclick="saveMarkah()" class="w-full py-5 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">
+                <button id="btnSave" onclick="saveMarkah()" class="w-full py-5 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest text-xs active:scale-95 transition-all shadow-xl">
                     Simpan Markah
                 </button>
             </div>
@@ -116,7 +126,6 @@
         const scriptURL = "https://script.google.com/macros/s/AKfycbzVzaPdACxnvKJDRG5cqKDZBhLu6V8z3g3N4MT55scDGIAgU-r3ekjMAt_Zj4x8O75lBg/exec"; 
         let students = [], liveMarks = {}, selectedClass = "Semua";
         window.currentRole = 'Penilai 1';
-        window.activeStudentId = null;
 
         const skema = [
             { name: "Persediaan & Blok", weight: 5, cap: 5.0 },
@@ -128,20 +137,20 @@
 
         async function fetchMarks() {
             try {
-                document.getElementById('syncStatus').innerText = "Syncing...";
                 const res = await fetch(scriptURL);
                 const data = await res.json();
                 students = data.students; liveMarks = data.marks;
-                document.getElementById('syncStatus').innerText = "Live";
+                document.getElementById('syncStatus').innerText = "LIVE";
                 initFilters();
                 renderView();
-            } catch (e) { document.getElementById('syncStatus').innerText = "Offline"; }
+                preparePrintReport();
+            } catch (e) { document.getElementById('syncStatus').innerText = "OFFLINE"; }
         }
 
         function initFilters() {
             const filter = document.getElementById('classFilter');
             const classes = [...new Set(students.map(s => s.class))].sort();
-            filter.innerHTML = '<option value="Semua">Semua Pelajar (Keseluruhan)</option>' + 
+            filter.innerHTML = '<option value="Semua">Semua Pelajar</option>' + 
                 classes.map(c => `<option value="${c}">Kelas: ${c}</option>`).join('');
             filter.value = selectedClass;
         }
@@ -149,14 +158,12 @@
         function handleClassFilter(val) {
             selectedClass = val;
             renderView();
+            preparePrintReport();
         }
 
         function renderView() {
-            if (window.currentRole === 'Admin') {
-                renderAdminTable();
-            } else {
-                renderStudentList();
-            }
+            if (window.currentRole === 'Admin') renderAdminTable();
+            else renderStudentList();
         }
 
         function renderStudentList() {
@@ -164,8 +171,8 @@
             const filtered = selectedClass === "Semua" ? students : students.filter(s => s.class === selectedClass);
             container.innerHTML = filtered.map(s => {
                 const hasMark = liveMarks[s.id] && liveMarks[s.id][window.currentRole];
-                return `<div onclick="openScoring('${s.id}')" class="glass-card p-5 cursor-pointer hover:border-cyan-400 flex justify-between items-center">
-                    <div><p class="text-[9px] text-white/20 mono uppercase">${s.class}</p><h3 class="font-bold text-white">${s.name}</h3></div>
+                return `<div onclick="openScoring('${s.id}')" class="glass-card p-5 cursor-pointer hover:border-cyan-400 flex justify-between items-center transition-all">
+                    <div><p class="text-[9px] text-white/20 mono uppercase">${s.class}</p><h3 class="font-bold text-white text-sm">${s.name}</h3></div>
                     <div class="status-indicator ${hasMark ? 'completed' : 'pending'}"></div>
                 </div>`;
             }).join('');
@@ -173,34 +180,65 @@
 
         function renderAdminTable() {
             const tbody = document.getElementById('adminTableBody');
-            // Hanya paparkan isi jadual jika kelas dipilih atau tekan 'Semua'
             const filtered = selectedClass === "Semua" ? students : students.filter(s => s.class === selectedClass);
             
             tbody.innerHTML = filtered.map(s => {
-                const m = liveMarks[s.id] || {}, p1 = m['Penilai 1'] || {pecut:0, lontar:0}, p2 = m['Penilai 2'] || {pecut:0, lontar:0};
-                const p1Avg = (p1.pecut + p1.lontar)/2, p2Avg = (p2.pecut + p2.lontar)/2, final = (p1Avg + p2Avg)/2;
+                const m = liveMarks[s.id] || {};
+                const p1 = (m['Penilai 1'] ? m['Penilai 1'].pecut : 0);
+                const p2 = (m['Penilai 2'] ? m['Penilai 2'].pecut : 0);
+                const final = (p1 + p2) / 2;
                 const cat = window.getCategory(final);
-                return `<tr class="hover:bg-white/5">
+                
+                return `<tr>
                     <td class="p-4"><div class="font-bold text-xs">${s.name}</div><div class="text-[9px] text-white/20">${s.class}</div></td>
-                    <td class="p-4 text-center mono text-xs text-white/40">${p1Avg.toFixed(2)}</td>
-                    <td class="p-4 text-center mono text-xs text-white/40">${p2Avg.toFixed(2)}</td>
+                    <td class="p-4 text-center mono text-xs text-white/40">${p1.toFixed(1)}</td>
+                    <td class="p-4 text-center mono text-xs text-white/40">${p2.toFixed(1)}</td>
                     <td class="p-4 text-center font-bold text-cyan-400 mono text-xs">${final.toFixed(2)}</td>
                     <td class="p-4 text-right"><span class="text-[8px] font-bold px-2 py-1 rounded-full" style="background:${cat.color}22; color:${cat.color}">${cat.label}</span></td>
                 </tr>`;
             }).join('');
         }
 
-        function openScoring(id) {
-            window.activeStudentId = id;
-            const s = students.find(x => x.id === id);
-            document.getElementById('modalStudentName').innerText = s.name;
-            const m = (liveMarks[id] && liveMarks[id][window.currentRole]) || {pecut:0};
-            document.getElementById('mainSlider').value = m.pecut || 0;
-            updateScore(m.pecut || 0);
-            document.getElementById('scoringModal').classList.remove('hidden');
+        function preparePrintReport() {
+            const container = document.getElementById('printReport');
+            const filtered = selectedClass === "Semua" ? students : students.filter(s => s.class === selectedClass);
+            
+            let tableRows = filtered.map((s, idx) => {
+                const m = liveMarks[s.id] || {};
+                const p1 = (m['Penilai 1'] ? m['Penilai 1'].pecut : 0);
+                const p2 = (m['Penilai 2'] ? m['Penilai 2'].pecut : 0);
+                const final = (p1 + p2) / 2;
+                return `<tr>
+                    <td class="text-left">${idx+1}. ${s.name}</td>
+                    <td>${s.class}</td>
+                    <td>${p1.toFixed(1)}</td>
+                    <td>${p2.toFixed(1)}</td>
+                    <td><strong>${final.toFixed(2)}</strong></td>
+                    <td>${window.getCategory(final).label}</td>
+                </tr>`;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="p-10">
+                    <h1 style="text-align:center; font-size:16px;">LAPORAN PENTAKSIRAN AMALI OLAHRAGA</h1>
+                    <p style="text-align:center; font-size:12px;">Kelas: ${selectedClass}</p>
+                    <table border="1" style="width:100%; margin-top:20px;">
+                        <thead>
+                            <tr style="background:#f2f2f2;">
+                                <th class="text-left">Nama Pelajar</th>
+                                <th>Unit</th>
+                                <th>P1 (Markah)</th>
+                                <th>P2 (Markah)</th>
+                                <th>Purata Akhir</th>
+                                <th>Keputusan</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>`;
         }
 
-        function updateScore(val) {
+        window.updateScore = (val) => {
             const total = parseFloat(val);
             document.getElementById('valTotal').innerText = total.toFixed(1);
             const cat = window.getCategory(total);
@@ -218,24 +256,42 @@
                 </div>`;
             });
             document.getElementById('criteriaDetails').innerHTML = html;
-        }
+        };
 
         window.getCategory = (v) => {
             if (v >= 23) return {label:'Amat Cemerlang', color:'#10b981'};
             if (v >= 19) return {label:'Cemerlang', color:'#3b82f6'};
             if (v >= 15) return {label:'Kepujian', color:'#f59e0b'};
-            return {label:'Sederhana / Lemah', color:'#ef4444'};
+            if (v >= 13) return {label:'Sederhana', color:'#ef4444'};
+            return {label:'Lemah', color:'#7f1d1d'};
         };
 
         window.switchRole = (role) => {
             window.currentRole = role;
+            document.getElementById('currentRoleDisplay').innerText = `Sessi: ${role}`;
+            
+            // Fix butang (Penilai 1, 2, Admin)
+            document.getElementById('roleBtn1').className = role === 'Penilai 1' ? 'px-6 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black' : 'px-6 py-2 rounded-xl text-xs font-bold text-white/50';
+            document.getElementById('roleBtn2').className = role === 'Penilai 2' ? 'px-6 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black' : 'px-6 py-2 rounded-xl text-xs font-bold text-white/50';
             document.getElementById('roleBtnAdmin').className = role === 'Admin' ? 'px-6 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black' : 'px-6 py-2 rounded-xl text-xs font-bold text-white/50';
+            
             document.getElementById('penilaiView').classList.toggle('hidden-section', role === 'Admin');
             document.getElementById('adminView').classList.toggle('hidden-section', role !== 'Admin');
             renderView();
         };
 
+        function openScoring(id) {
+            window.activeStudentId = id;
+            const s = students.find(x => x.id === id);
+            document.getElementById('modalStudentName').innerText = s.name;
+            const m = (liveMarks[id] && liveMarks[id][window.currentRole]) || {pecut:0};
+            document.getElementById('mainSlider').value = m.pecut || 0;
+            updateScore(m.pecut || 0);
+            document.getElementById('scoringModal').classList.remove('hidden');
+        }
+
         window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
+        
         window.saveMarkah = async () => {
             const pecut = parseFloat(document.getElementById('mainSlider').value);
             const btn = document.getElementById('btnSave');
@@ -246,6 +302,7 @@
             } catch (e) { btn.innerText = "Ralat!"; btn.disabled = false; }
         };
 
+        setInterval(fetchMarks, 30000);
         window.onload = fetchMarks;
     </script>
 </body>
