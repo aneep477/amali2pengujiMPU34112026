@@ -1,181 +1,71 @@
-<!DOCTYPE html>
-<html lang="ms">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXON // HP3 Weighted Scoring</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root { --accent: #00f2ff; --bg: #0a0c10; }
-        body { background: var(--bg); color: #e2e8f0; font-family: sans-serif; }
-        .glass-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; }
-        input[type=range] { -webkit-appearance: none; width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%; background: var(--accent); border: 3px solid white; cursor: pointer; }
-        .hidden-section { display: none; }
-    </style>
-</head>
-<body class="p-4 md:p-8">
+// Ganti dengan API Key ChatGPT anda
+const openAiKey = "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";
 
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold uppercase tracking-tighter text-cyan-400 italic">AXON // HP3 SYNC</h1>
-            <div class="flex gap-2">
-                <button onclick="switchRole('Penilai 1')" id="btnP1" class="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs">P1</button>
-                <button onclick="switchRole('Penilai 2')" id="btnP2" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">P2</button>
-            </div>
-        </header>
+// Fungsi Jana AI untuk Rumusan
+window.generateFinalAI = async (id) => {
+    const s = students.find(x => x.id === id);
+    const m = liveMarks[id] || {};
+    const p1 = m['Penilai 1'] || {pecut:0, lontar:0};
+    const p2 = m['Penilai 2'] || {pecut:0, lontar:0};
+    const avgPecut = ((p1.pecut + p2.pecut) / 2).toFixed(2);
+    const avgLontar = ((p1.lontar + p2.lontar) / 2).toFixed(2);
 
-        <div id="penilaiView" class="space-y-4">
-            <select id="classFilter" onchange="renderStudentList()" class="w-full bg-slate-900 border border-white/10 rounded-xl p-4 text-white font-bold">
-                <option value="">-- Pilih Kelas --</option>
-            </select>
-            <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
-    </div>
+    try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${openAiKey}` },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{role: "user", content: `Berikan rumusan prestasi sukan profesional (Bahasa Melayu, 30 patah perkataan) untuk atlet ${s.name}. Purata Lari Pecut: ${avgPecut}/25, Purata Lontar Peluru: ${avgLontar}/25.`}]
+            })
+        });
+        const data = await response.json();
+        const aiResult = data.choices[0].message.content;
+        
+        // Simpan ke Sheets (Lajur K, L, M)
+        await fetch(scriptURL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ 
+                id: id, 
+                finalPecut: avgPecut, 
+                finalLontar: avgLontar, 
+                aiReport: aiResult 
+            }) 
+        });
+        
+        alert("Rumusan AI Berjaya Dijana & Disimpan!");
+        fetchMarks(); // Refresh data
+    } catch (e) { alert("Ralat Janaan AI"); }
+};
 
-    <div id="scoringModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm hidden">
-        <div class="glass-card w-full max-w-lg p-6 md:p-8 overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="modalStudentName" class="text-xl font-bold text-white uppercase">Nama Pelajar</h2>
-                <button onclick="closeModal()" class="text-white/40 text-2xl">&times;</button>
-            </div>
+// Kemas kini Janaan PDF untuk memasukkan AI
+function preparePrintReport() {
+    const container = document.getElementById('printReport');
+    const filtered = students.filter(s => !selectedClass || s.class === selectedClass);
+    
+    let reportHtml = filtered.map(s => {
+        const m = liveMarks[s.id] || {};
+        const p1 = m['Penilai 1'] || {pecut:0, lontar:0};
+        const p2 = m['Penilai 2'] || {pecut:0, lontar:0};
+        const avgP = ((p1.pecut + p2.pecut) / 2).toFixed(2);
+        const avgL = ((p1.lontar + p2.lontar) / 2).toFixed(2);
+        const aiComment = m.aiReport || "Rumusan AI belum dijana.";
 
-            <div class="space-y-8">
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <span class="text-xs font-bold text-white/40 uppercase">1. Lari Pecut</span>
-                        <span id="txtPecut" class="text-2xl font-bold text-cyan-400">0.0</span>
-                    </div>
-                    <input type="range" id="slidePecut" min="0" max="25" step="0.1" value="0" oninput="updateUI()" class="w-full">
-                    <div id="detPecut" class="space-y-2"></div>
+        return `
+            <div class="page-break" style="padding:20px; border:1px solid #000; margin-bottom:20px;">
+                <h3>LAPORAN PRESTASI INDIVIDU: ${s.name}</h3>
+                <p>Kelas: ${s.class} | ID: ${s.id}</p>
+                <table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
+                    <tr><th>ACARA</th><th>PENILAI 1</th><th>PENILAI 2</th><th>PURATA AKHIR</th></tr>
+                    <tr><td>LARI PECUT</td><td>${p1.pecut}</td><td>${p2.pecut}</td><td><b>${avgP}</b></td></tr>
+                    <tr><td>LONTAR PELURU</td><td>${p1.lontar}</td><td>${p2.lontar}</td><td><b>${avgL}</b></td></tr>
+                </table>
+                <div style="margin-top:15px; padding:10px; background:#f0f0f0; border-left:5px solid #00f2ff;">
+                    <b>RUMUSAN PRESTASI (AI):</b><br>
+                    <p><i>${aiComment}</i></p>
                 </div>
-
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <span class="text-xs font-bold text-white/40 uppercase">2. Lontar Peluru</span>
-                        <span id="txtLontar" class="text-2xl font-bold text-purple-400">0.0</span>
-                    </div>
-                    <input type="range" id="slideLontar" min="0" max="25" step="0.1" value="0" oninput="updateUI()" class="w-full">
-                    <div id="detLontar" class="space-y-2"></div>
-                </div>
-
-                <button id="btnSave" onclick="saveData()" class="w-full py-4 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest text-sm hover:scale-[0.98] transition-transform">Hantar Markah Live</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbzVzaPdACxnvKJDRG5cqKDZBhLu6V8z3g3N4MT55scDGIAgU-r3ekjMAt_Zj4x8O75lBg/exec";
-        let students = [], liveMarks = {}, currentRole = "Penilai 1", activeId = null;
-
-        // Pemberatan markah: Mudah (Tertinggi), Sederhana, Sukar (Terendah)
-        const skemaPecut = [
-            { n: "Penamat", l: 12, diff: "Mudah" },
-            { n: "Permulaan", l: 8, diff: "Sederhana" },
-            { n: "Teknik Larian", l: 5, diff: "Sukar" }
-        ];
-
-        const skemaLontar = [
-            { n: "Sedia & Pulihan", l: 12, diff: "Mudah" },
-            { n: "Lungsuran", l: 8, diff: "Sederhana" },
-            { n: "Teknik Lontaran", l: 5, diff: "Sukar" }
-        ];
-
-        async function fetchInitialData() {
-            try {
-                const res = await fetch(scriptURL);
-                const data = await res.json();
-                students = data.students;
-                liveMarks = data.marks;
-                
-                const classes = [...new Set(students.map(s => s.class))].sort();
-                const filter = document.getElementById('classFilter');
-                classes.forEach(c => filter.innerHTML += `<option value="${c}">${c}</option>`);
-                renderStudentList();
-            } catch (e) { console.error("Ralat data"); }
-        }
-
-        function renderStudentList() {
-            const container = document.getElementById('studentList');
-            const cls = document.getElementById('classFilter').value;
-            container.innerHTML = "";
-            
-            students.filter(s => !cls || s.class === cls).forEach(s => {
-                const hasMark = liveMarks[s.id] && liveMarks[s.id][currentRole] && (liveMarks[s.id][currentRole].pecut > 0 || liveMarks[s.id][currentRole].lontar > 0);
-                container.innerHTML += `
-                    <div onclick="openScoring('${s.id}')" class="glass-card p-4 cursor-pointer hover:border-cyan-400 flex justify-between items-center transition-all">
-                        <span class="font-bold text-sm uppercase">${s.name}</span>
-                        <div class="h-2 w-2 rounded-full ${hasMark ? 'bg-emerald-400 shadow-[0_0_8px_#4ade80]' : 'bg-orange-400'}"></div>
-                    </div>`;
-            });
-        }
-
-        window.openScoring = (id) => {
-            activeId = id;
-            const s = students.find(x => x.id === id);
-            document.getElementById('modalStudentName').innerText = s.name;
-            const m = (liveMarks[id] && liveMarks[id][currentRole]) || { pecut: 0, lontar: 0 };
-            document.getElementById('slidePecut').value = m.pecut;
-            document.getElementById('slideLontar').value = m.lontar;
-            updateUI();
-            document.getElementById('scoringModal').classList.remove('hidden');
-        };
-
-        window.updateUI = () => {
-            const p = parseFloat(document.getElementById('slidePecut').value);
-            const l = parseFloat(document.getElementById('slideLontar').value);
-            document.getElementById('txtPecut').innerText = p.toFixed(1);
-            document.getElementById('txtLontar').innerText = l.toFixed(1);
-            
-            renderDetails('detPecut', p, skemaPecut, 'bg-cyan-400');
-            renderDetails('detLontar', l, skemaLontar, 'bg-purple-400');
-        };
-
-        function renderDetails(id, total, skema, color) {
-            let rem = total;
-            document.getElementById(id).innerHTML = skema.map(item => {
-                const s = Math.min(rem, item.l); rem -= s;
-                const badgeColor = item.diff === "Mudah" ? "text-emerald-400" : item.diff === "Sukar" ? "text-red-400" : "text-amber-400";
-                return `
-                    <div class="text-[10px] uppercase font-bold text-white/30">
-                        <div class="flex justify-between mb-1">
-                            <span>${item.n} <b class="${badgeColor}">(${item.diff})</b></span>
-                            <span>${s.toFixed(1)} / ${item.l}</span>
-                        </div>
-                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div class="${color} h-full transition-all duration-300" style="width:${(s/item.l)*100}%"></div>
-                        </div>
-                    </div>`;
-            }).join('');
-        }
-
-        window.saveData = async () => {
-            const btn = document.getElementById('btnSave');
-            btn.innerText = "Syncing..."; btn.disabled = true;
-            const p = parseFloat(document.getElementById('slidePecut').value);
-            const l = parseFloat(document.getElementById('slideLontar').value);
-            
-            try {
-                await fetch(scriptURL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify({ id: activeId, role: currentRole, pecut: p, lontar: l }) 
-                });
-                liveMarks[activeId][currentRole] = { pecut: p, lontar: l };
-                closeModal(); renderStudentList();
-            } catch (e) { alert("Ralat penghantaran"); }
-            btn.innerText = "Hantar Markah Live"; btn.disabled = false;
-        };
-
-        window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
-        window.switchRole = (r) => {
-            currentRole = r;
-            document.getElementById('btnP1').className = r === 'Penilai 1' ? 'px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs' : 'px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs';
-            document.getElementById('btnP2').className = r === 'Penilai 2' ? 'px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs' : 'px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs';
-            renderStudentList();
-        };
-
-        window.onload = fetchInitialData;
-    </script>
-</body>
-</html>
+            </div>`;
+    }).join('');
+    container.innerHTML = reportHtml;
+}
