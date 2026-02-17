@@ -2,249 +2,180 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AXON // HP3 Advanced Scoring</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXON // HP3 Weighted Scoring</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root { --accent: #00f2ff; --bg: #0a0c10; }
-        body { background: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: #e2e8f0; font-family: sans-serif; }
         .glass-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; }
         input[type=range] { -webkit-appearance: none; width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%; background: var(--accent); border: 3px solid white; box-shadow: 0 0 15px var(--accent); cursor: pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%; background: var(--accent); border: 3px solid white; cursor: pointer; }
         .hidden-section { display: none; }
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-6xl mx-auto no-print">
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-            <div>
-                <h1 class="text-3xl font-bold text-white uppercase italic tracking-tighter">AXON <span class="text-cyan-400">// HP3</span></h1>
-                <span id="syncStatus" class="text-[9px] font-bold text-yellow-400 uppercase tracking-widest italic">Syncing...</span>
-            </div>
-            <div class="flex gap-2 p-1 glass-card bg-white/5">
-                <button onclick="switchRole('Penilai 1')" id="roleBtn1" class="px-6 py-2 rounded-xl text-xs font-bold transition-all bg-cyan-500 text-black">P1</button>
-                <button onclick="switchRole('Penilai 2')" id="roleBtn2" class="px-6 py-2 rounded-xl text-xs font-bold transition-all text-white/50">P2</button>
-                <button onclick="switchRole('Admin')" id="roleBtnAdmin" class="px-6 py-2 rounded-xl text-xs font-bold transition-all text-white/50">Admin</button>
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold uppercase tracking-tighter text-cyan-400 italic">AXON // HP3 SYNC</h1>
+            <div class="flex gap-2">
+                <button onclick="switchRole('Penilai 1')" id="btnP1" class="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs">P1</button>
+                <button onclick="switchRole('Penilai 2')" id="btnP2" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">P2</button>
             </div>
         </header>
 
-        <div id="penilaiView" class="space-y-6">
-            <select id="penilaiClassFilter" onchange="handlePenilaiClass(this.value)" class="w-full bg-slate-900 border border-white/10 rounded-xl p-4 text-white font-bold outline-none focus:border-cyan-400">
+        <div id="penilaiView" class="space-y-4">
+            <select id="classFilter" onchange="renderStudentList()" class="w-full bg-slate-900 border border-white/10 rounded-xl p-4 text-white font-bold">
                 <option value="">-- Pilih Kelas --</option>
             </select>
-            <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
-
-        <div id="adminView" class="hidden-section glass-card p-6 overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="border-b border-white/10 text-white/40 uppercase">
-                    <tr><th class="p-4">Atlet</th><th class="p-4 text-center">P1 Avg</th><th class="p-4 text-center">P2 Avg</th><th class="p-4 text-center">Final</th><th class="p-4 text-right">Tahap</th></tr>
-                </thead>
-                <tbody id="adminTableBody" class="divide-y divide-white/5"></tbody>
-            </table>
+            <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
     </div>
 
-    <div id="scoringModal" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/95 backdrop-blur-xl hidden">
-        <div class="glass-card w-full max-w-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto border-white/10 rounded-t-[32px] md:rounded-[24px]">
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h2 id="modalStudentName" class="text-2xl font-bold text-white uppercase tracking-tight">Nama Pelajar</h2>
-                    <button onclick="openRubrik()" class="text-[9px] bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full border border-amber-500/30 mt-2 uppercase font-bold tracking-widest">📖 Rujukan Rubrik</button>
-                </div>
-                <button onclick="closeModal()" class="text-white/40 text-3xl">&times;</button>
+    <div id="scoringModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm hidden">
+        <div class="glass-card w-full max-w-lg p-6 md:p-8 overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalStudentName" class="text-xl font-bold text-white uppercase">Nama Pelajar</h2>
+                <button onclick="closeModal()" class="text-white/40 text-2xl">&times;</button>
             </div>
 
             <div class="space-y-8">
-                <div class="bg-white/5 p-6 rounded-[30px] border border-white/10">
-                    <div class="flex justify-between items-end mb-2">
-                        <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">1. Lari Pecut (Difficulty Priority)</span>
-                        <div class="flex items-baseline gap-1"><span id="valPecut" class="text-4xl font-bold text-cyan-400 tabular-nums">0.0</span><span class="text-[10px] text-white/20">/ 25.0</span></div>
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span class="text-xs font-bold text-white/40 uppercase">1. Lari Pecut</span>
+                        <span id="txtPecut" class="text-2xl font-bold text-cyan-400">0.0</span>
                     </div>
-                    <div id="stagePecut" class="mb-4"></div>
-                    <input type="range" id="sliderPecut" min="0" max="25" step="0.1" value="0" oninput="updateScoreUI()" class="w-full">
-                    <div id="detailsPecut" class="mt-4 space-y-2"></div>
+                    <input type="range" id="slidePecut" min="0" max="25" step="0.1" value="0" oninput="updateUI()" class="w-full">
+                    <div id="detPecut" class="space-y-2"></div>
                 </div>
 
-                <div class="bg-white/5 p-6 rounded-[30px] border border-white/10">
-                    <div class="flex justify-between items-end mb-2">
-                        <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">2. Lontar Peluru (Difficulty Priority)</span>
-                        <div class="flex items-baseline gap-1"><span id="valLontar" class="text-4xl font-bold text-purple-400 tabular-nums">0.0</span><span class="text-[10px] text-white/20">/ 25.0</span></div>
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span class="text-xs font-bold text-white/40 uppercase">2. Lontar Peluru</span>
+                        <span id="txtLontar" class="text-2xl font-bold text-purple-400">0.0</span>
                     </div>
-                    <div id="stageLontar" class="mb-4"></div>
-                    <input type="range" id="sliderLontar" min="0" max="25" step="0.1" value="0" oninput="updateScoreUI()" class="w-full">
-                    <div id="detailsLontar" class="mt-4 space-y-2"></div>
+                    <input type="range" id="slideLontar" min="0" max="25" step="0.1" value="0" oninput="updateUI()" class="w-full">
+                    <div id="detLontar" class="space-y-2"></div>
                 </div>
 
-                <div class="p-4 bg-cyan-400/5 border border-cyan-400/10 rounded-2xl">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[9px] font-bold text-cyan-400 uppercase tracking-widest">Analisis Prestasi Teknikal</span>
-                        <button onclick="generateExpertReview()" class="text-[9px] bg-cyan-400/20 px-3 py-1 rounded-lg">✨ Jana Ulasan</button>
-                    </div>
-                    <textarea id="aiComment" class="w-full bg-transparent text-xs text-white/60 h-16 outline-none border-none resize-none" placeholder="Ulasan automatik..."></textarea>
-                </div>
-
-                <button id="btnSave" onclick="saveMarkah()" class="w-full py-5 rounded-2xl bg-cyan-500 text-black font-bold uppercase text-xs tracking-widest">Hantar Markah Live</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="rubrikModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl hidden">
-        <div class="glass-card w-full max-w-xl p-6 border-white/10">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-white uppercase tracking-widest">Tahap Kesukaran Teknik</h3>
-                <button onclick="closeRubrik()" class="text-white/40 text-2xl">&times;</button>
-            </div>
-            <div class="space-y-3 text-[10px] text-white/60 italic uppercase tracking-wider">
-                <p>Pecut: Penamat (M) &rarr; Permulaan (Sd) &rarr; Larian (Sk)</p>
-                <p>Peluru: Sedia/Pulihan (M) &rarr; Lungsur (Sd) &rarr; Lontar (Sk)</p>
+                <button id="btnSave" onclick="saveData()" class="w-full py-4 rounded-2xl bg-cyan-500 text-black font-bold uppercase tracking-widest text-sm hover:scale-[0.98] transition-transform">Hantar Markah Live</button>
             </div>
         </div>
     </div>
 
     <script>
         const scriptURL = "https://script.google.com/macros/s/AKfycbzVzaPdACxnvKJDRG5cqKDZBhLu6V8z3g3N4MT55scDGIAgU-r3ekjMAt_Zj4x8O75lBg/exec";
+        let students = [], liveMarks = {}, currentRole = "Penilai 1", activeId = null;
 
-        let students = [], liveMarks = {}, selectedClass = "";
-        window.currentRole = 'Penilai 1';
-
-        // Definisi Aras Kesukaran (Order: Mudah -> Sederhana -> Sukar)
+        // Pemberatan markah: Mudah (Tertinggi), Sederhana, Sukar (Terendah)
         const skemaPecut = [
-            { n: "Fasa Penamat", l: 5, difficulty: "Mudah" },
-            { n: "Fasa Permulaan", l: 10, difficulty: "Sederhana" },
-            { n: "Teknik Larian", l: 10, difficulty: "Sukar" }
+            { n: "Penamat", l: 12, diff: "Mudah" },
+            { n: "Permulaan", l: 8, diff: "Sederhana" },
+            { n: "Teknik Larian", l: 5, diff: "Sukar" }
         ];
 
         const skemaLontar = [
-            { n: "Fasa Sedia & Pulihan", l: 10, difficulty: "Mudah" },
-            { n: "Fasa Lungsuran", l: 5, difficulty: "Sederhana" },
-            { n: "Teknik Lontaran", l: 10, difficulty: "Sukar" }
+            { n: "Sedia & Pulihan", l: 12, diff: "Mudah" },
+            { n: "Lungsuran", l: 8, diff: "Sederhana" },
+            { n: "Teknik Lontaran", l: 5, diff: "Sukar" }
         ];
 
-        async function fetchMarks() {
+        async function fetchInitialData() {
             try {
                 const res = await fetch(scriptURL);
                 const data = await res.json();
-                students = data.students; liveMarks = data.marks;
-                document.getElementById('syncStatus').innerText = "LIVE TERHUBUNG";
-                initFilters(); renderView();
-            } catch (e) { document.getElementById('syncStatus').innerText = "OFFLINE"; }
-        }
-
-        function initFilters() {
-            const classes = [...new Set(students.map(s => s.class))].sort();
-            const pFilter = document.getElementById('penilaiClassFilter');
-            pFilter.innerHTML = '<option value="">-- Pilih Kelas --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-        }
-
-        window.handlePenilaiClass = (val) => { selectedClass = val; renderStudentList(); }
-
-        window.getCategory = (v) => {
-            if (v >= 23) return { label: 'Amat Cemerlang', color: '#10b981', ulasan: "Teknik sempurna di semua aras kesukaran." };
-            if (v >= 19) return { label: 'Cemerlang', color: '#3b82f6', ulasan: "Cemerlang di aras mudah dan sederhana, konsisten di aras sukar." };
-            if (v >= 15) return { label: 'Kepujian', color: '#f59e0b', ulasan: "Mantap di aras mudah, ralat minimal di aras sederhana." };
-            if (v >= 13) return { label: 'Sederhana', color: '#f97316', ulasan: "Berjaya kuasai aras mudah, cabaran di aras sukar." };
-            return { label: 'Lemah', color: '#ef4444', ulasan: "Masih diperingkat asas aras mudah." };
-        };
-
-        window.updateScoreUI = () => {
-            const p = parseFloat(document.getElementById('sliderPecut').value);
-            const l = parseFloat(document.getElementById('sliderLontar').value);
-            document.getElementById('valPecut').innerText = p.toFixed(1);
-            document.getElementById('valLontar').innerText = l.toFixed(1);
-
-            const catP = window.getCategory(p);
-            const catL = window.getCategory(l);
-
-            document.getElementById('stagePecut').innerHTML = `<span class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest" style="background:${catP.color}22; color:${catP.color}; border:1px solid ${catP.color}44">${catP.label}</span>`;
-            document.getElementById('stageLontar').innerHTML = `<span class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest" style="background:${catL.color}22; color:${catL.color}; border:1px solid ${catL.color}44">${catL.label}</span>`;
-
-            renderDifficultyFlow('detailsPecut', p, skemaPecut, 'bg-cyan-400');
-            renderDifficultyFlow('detailsLontar', l, skemaLontar, 'bg-purple-400');
-        }
-
-        // Algoritma Aliran Aras Kesukaran
-        function renderDifficultyFlow(id, total, skema, color) {
-            let rem = total;
-            document.getElementById(id).innerHTML = skema.map(item => {
-                const s = Math.min(rem, item.l); rem -= s;
-                const badgeColor = item.difficulty === "Sukar" ? "text-red-400" : item.difficulty === "Sederhana" ? "text-amber-400" : "text-emerald-400";
-                return `<div class="mt-2"><div class="text-[8px] uppercase text-white/30 flex justify-between">
-                        <span>${item.n} <b class="${badgeColor}">(${item.difficulty})</b></span><span>${s.toFixed(1)} / ${item.l}</span></div>
-                        <div class="h-1 bg-white/5 rounded-full overflow-hidden mt-1"><div class="${color} h-full transition-all duration-300" style="width:${(s/item.l)*100}%"></div></div></div>`;
-            }).join('');
-        }
-
-        window.generateExpertReview = () => {
-            const p = parseFloat(document.getElementById('sliderPecut').value);
-            const l = parseFloat(document.getElementById('sliderLontar').value);
-            const ulasan = `Pecut: ${window.getCategory(p).ulasan} | Lontar Peluru: ${window.getCategory(l).ulasan} Fokus baiki aras sukar.`;
-            document.getElementById('aiComment').value = ulasan;
-        }
-
-        window.openScoring = (id) => {
-            window.activeStudentId = id;
-            const s = students.find(x => x.id === id);
-            document.getElementById('modalStudentName').innerText = s.name;
-            const m = (liveMarks[id] && liveMarks[id][window.currentRole]) || { pecut: 0, lontar: 0 };
-            document.getElementById('sliderPecut').value = m.pecut;
-            document.getElementById('sliderLontar').value = m.lontar;
-            window.updateScoreUI();
-            document.getElementById('scoringModal').classList.remove('hidden');
-        }
-
-        window.saveMarkah = async () => {
-            const p = parseFloat(document.getElementById('sliderPecut').value);
-            const l = parseFloat(document.getElementById('sliderLontar').value);
-            const btn = document.getElementById('btnSave'); btn.disabled = true;
-            try {
-                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ id: window.activeStudentId, role: window.currentRole, pecut: p, lontar: l }) });
-                document.getElementById('scoringModal').classList.add('hidden');
-                fetchMarks();
-            } finally { btn.disabled = false; }
-        }
-
-        window.switchRole = (role) => {
-            window.currentRole = role;
-            ['roleBtn1', 'roleBtn2', 'roleBtnAdmin'].forEach(id => document.getElementById(id).className = "px-6 py-2 rounded-xl text-xs font-bold transition-all text-white/50");
-            document.getElementById(role === 'Penilai 1' ? 'roleBtn1' : role === 'Penilai 2' ? 'roleBtn2' : 'roleBtnAdmin').className = "px-6 py-2 rounded-xl text-xs font-bold transition-all bg-cyan-500 text-black";
-            document.getElementById('penilaiView').classList.toggle('hidden-section', role === 'Admin');
-            document.getElementById('adminView').classList.toggle('hidden-section', role !== 'Admin');
-            if(role === 'Admin') renderAdminTable();
-        }
-
-        function renderAdminTable() {
-            const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = students.map(s => {
-                const m = liveMarks[s.id] || {};
-                const p1 = m['Penilai 1'] || {pecut:0, lontar:0};
-                const p2 = m['Penilai 2'] || {pecut:0, lontar:0};
-                const final = ((p1.pecut+p1.lontar)/2 + (p2.pecut+p2.lontar)/2)/2;
-                const cat = window.getCategory(final);
-                return `<tr><td class="p-4 font-bold text-white uppercase">${s.name}</td><td class="p-4 text-center mono">${((p1.pecut+p1.lontar)/2).toFixed(1)}</td><td class="p-4 text-center mono">${((p2.pecut+p2.lontar)/2).toFixed(1)}</td><td class="p-4 text-center text-cyan-400 font-bold">${final.toFixed(2)}</td><td class="p-4 text-right font-bold uppercase" style="color:${cat.color}">${cat.label}</td></tr>`;
-            }).join('');
+                students = data.students;
+                liveMarks = data.marks;
+                
+                const classes = [...new Set(students.map(s => s.class))].sort();
+                const filter = document.getElementById('classFilter');
+                classes.forEach(c => filter.innerHTML += `<option value="${c}">${c}</option>`);
+                renderStudentList();
+            } catch (e) { console.error("Ralat data"); }
         }
 
         function renderStudentList() {
             const container = document.getElementById('studentList');
-            if (!selectedClass) { container.innerHTML = ""; return; }
-            const filtered = students.filter(s => s.class === selectedClass);
-            container.innerHTML = filtered.map(s => {
-                const hasMark = liveMarks[s.id] && liveMarks[s.id][window.currentRole] && (liveMarks[s.id][window.currentRole].pecut > 0 || liveMarks[s.id][window.currentRole].lontar > 0);
-                return `<div onclick="openScoring('${s.id}')" class="glass-card p-5 cursor-pointer hover:border-cyan-400/50 flex justify-between items-center transition-all active:scale-95">
-                    <div><h3 class="font-bold text-sm text-white uppercase tracking-tight">${s.name}</h3></div>
-                    <div class="status-dot ${hasMark ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-orange-500 shadow-[0_0_8px_#f59e0b]'}"></div>
-                </div>`;
+            const cls = document.getElementById('classFilter').value;
+            container.innerHTML = "";
+            
+            students.filter(s => !cls || s.class === cls).forEach(s => {
+                const hasMark = liveMarks[s.id] && liveMarks[s.id][currentRole] && (liveMarks[s.id][currentRole].pecut > 0 || liveMarks[s.id][currentRole].lontar > 0);
+                container.innerHTML += `
+                    <div onclick="openScoring('${s.id}')" class="glass-card p-4 cursor-pointer hover:border-cyan-400 flex justify-between items-center transition-all">
+                        <span class="font-bold text-sm uppercase">${s.name}</span>
+                        <div class="h-2 w-2 rounded-full ${hasMark ? 'bg-emerald-400 shadow-[0_0_8px_#4ade80]' : 'bg-orange-400'}"></div>
+                    </div>`;
+            });
+        }
+
+        window.openScoring = (id) => {
+            activeId = id;
+            const s = students.find(x => x.id === id);
+            document.getElementById('modalStudentName').innerText = s.name;
+            const m = (liveMarks[id] && liveMarks[id][currentRole]) || { pecut: 0, lontar: 0 };
+            document.getElementById('slidePecut').value = m.pecut;
+            document.getElementById('slideLontar').value = m.lontar;
+            updateUI();
+            document.getElementById('scoringModal').classList.remove('hidden');
+        };
+
+        window.updateUI = () => {
+            const p = parseFloat(document.getElementById('slidePecut').value);
+            const l = parseFloat(document.getElementById('slideLontar').value);
+            document.getElementById('txtPecut').innerText = p.toFixed(1);
+            document.getElementById('txtLontar').innerText = l.toFixed(1);
+            
+            renderDetails('detPecut', p, skemaPecut, 'bg-cyan-400');
+            renderDetails('detLontar', l, skemaLontar, 'bg-purple-400');
+        };
+
+        function renderDetails(id, total, skema, color) {
+            let rem = total;
+            document.getElementById(id).innerHTML = skema.map(item => {
+                const s = Math.min(rem, item.l); rem -= s;
+                const badgeColor = item.diff === "Mudah" ? "text-emerald-400" : item.diff === "Sukar" ? "text-red-400" : "text-amber-400";
+                return `
+                    <div class="text-[10px] uppercase font-bold text-white/30">
+                        <div class="flex justify-between mb-1">
+                            <span>${item.n} <b class="${badgeColor}">(${item.diff})</b></span>
+                            <span>${s.toFixed(1)} / ${item.l}</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="${color} h-full transition-all duration-300" style="width:${(s/item.l)*100}%"></div>
+                        </div>
+                    </div>`;
             }).join('');
         }
 
-        window.openRubrik = () => document.getElementById('rubrikModal').classList.remove('hidden');
-        window.closeRubrik = () => document.getElementById('rubrikModal').classList.add('hidden');
+        window.saveData = async () => {
+            const btn = document.getElementById('btnSave');
+            btn.innerText = "Syncing..."; btn.disabled = true;
+            const p = parseFloat(document.getElementById('slidePecut').value);
+            const l = parseFloat(document.getElementById('slideLontar').value);
+            
+            try {
+                await fetch(scriptURL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ id: activeId, role: currentRole, pecut: p, lontar: l }) 
+                });
+                liveMarks[activeId][currentRole] = { pecut: p, lontar: l };
+                closeModal(); renderStudentList();
+            } catch (e) { alert("Ralat penghantaran"); }
+            btn.innerText = "Hantar Markah Live"; btn.disabled = false;
+        };
+
         window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
-        window.onload = fetchMarks;
+        window.switchRole = (r) => {
+            currentRole = r;
+            document.getElementById('btnP1').className = r === 'Penilai 1' ? 'px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs' : 'px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs';
+            document.getElementById('btnP2').className = r === 'Penilai 2' ? 'px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs' : 'px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs';
+            renderStudentList();
+        };
+
+        window.onload = fetchInitialData;
     </script>
 </body>
 </html>
