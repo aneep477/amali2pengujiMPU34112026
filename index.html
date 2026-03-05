@@ -15,23 +15,28 @@
         .smart-input:focus { box-shadow: 0 0 20px var(--accent); background: black; }
         .hidden-section { display: none; }
         
+        /* Rubrik Design - Matching Image 4fc9c9 */
         .rubrik-tab.active { background: var(--accent); color: black; }
+        .rubrik-tab.lontar-active { background: #a855f7; color: white; }
+        .cat-box { border-radius: 6px; padding: 12px 5px; font-size: 10px; font-weight: bold; text-align: center; border-width: 2px; text-transform: uppercase; }
 
         @media print {
             @page { size: A4; margin: 0; }
             .no-print { display: none !important; }
             .print-only { display: block !important; color: black !important; background: white !important; width: 210mm; }
-            .report-page { width: 210mm; height: 297mm; padding: 10mm; page-break-after: always; display: flex; flex-direction: column; justify-content: space-between; }
-            .student-row-pdf { height: 135mm; border: 2.5px solid #000; padding: 20px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+            
+            /* GAYA SLIP PDF (2 PER PAGE) */
+            .report-page { width: 210mm; height: 297mm; padding: 10mm; page-break-after: always; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
+            .student-row-pdf { height: 135mm; border: 2.5px solid #000; padding: 20px; display: flex; flex-direction: column; justify-content: center; position: relative; box-sizing: border-box; background: white; }
             table { width: 100%; border-collapse: collapse; border: 1.5px solid black; margin: 10px 0; }
-            th, td { border: 1.5px solid black; padding: 8px; text-align: center; color: black !important; }
-            .student-img-pdf { width: 90px; height: 110px; object-fit: cover; border: 1.5px solid #000; background: #eee; }
+            th, td { border: 1.5px solid black; padding: 8px; text-align: center; color: black !important; font-size: 12px; }
+            .student-img-pdf { width: 95px; height: 115px; object-fit: cover; border: 2px solid #000; background: #f0f0f0; }
 
             /* GAYA BORANG MANUAL 3 KOLUM */
-            .borang-manual-page { padding: 15mm; background: white; color: black; min-height: 100vh; box-sizing: border-box; }
+            .borang-container { padding: 15mm; background: white; color: black; min-height: 100vh; box-sizing: border-box; }
             .grid-borang { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
             .petak-pelajar { display: flex; border: 1.5px solid black; height: 55px; align-items: center; box-sizing: border-box; }
-            .b-nama { flex: 2.5; padding: 4px; font-size: 8.5px; border-right: 1.5px solid black; font-weight: bold; height: 100%; display: flex; align-items: center; text-transform: uppercase; line-height: 1.1; }
+            .b-nama { flex: 2.5; padding: 4px; font-size: 8px; border-right: 1.5px solid black; font-weight: bold; height: 100%; display: flex; align-items: center; text-transform: uppercase; line-height: 1.1; }
             .b-markah { flex: 1; height: 100%; position: relative; }
             .b-markah::after { content: "/25"; position: absolute; bottom: 2px; right: 4px; font-size: 8px; color: #777; }
         }
@@ -49,6 +54,7 @@
             </div>
         </header>
 
+        <!-- VIEW PENILAI -->
         <div id="penilaiView" class="hidden-section space-y-6">
             <select id="penilaiClassFilter" onchange="handleClass(this.value)" class="w-full bg-black border border-white/10 rounded-xl p-4 text-cyan-400 font-bold outline-none uppercase italic">
                 <option value="">-- PILIH KELAS SEKTOR --</option>
@@ -56,16 +62,17 @@
             <div id="studentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
+        <!-- VIEW ADMIN (RUMUSAN) -->
         <div id="adminView" class="glass-card p-6 text-white">
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-3xl impact text-cyan-400 uppercase">Dashboard Rumusan</h2>
-                <div class="flex flex-wrap items-center gap-3">
-                    <select id="adminClassFilter" onchange="renderAdminTable()" class="bg-black border border-white/10 rounded-lg px-4 py-2 text-xs font-bold text-white outline-none">
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="adminClassFilter" onchange="handleClass(this.value)" class="bg-black border border-white/10 rounded-lg px-4 py-2 text-xs font-bold text-white outline-none">
                         <option value="">-- SEMUA KELAS --</option>
                     </select>
-                    <button onclick="cetakBorangManual('LARIAN')" class="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold hover:bg-cyan-400 transition-all uppercase italic">Borang Larian</button>
-                    <button onclick="cetakBorangManual('LONTAR PELURU')" class="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-400 transition-all uppercase italic">Borang Lontar</button>
-                    <button id="btnPrintPDF" onclick="preparePrintReport()" class="bg-cyan-500 text-black px-6 py-2 rounded-lg text-xs font-bold hover:bg-white transition-all uppercase italic">Cetak PDF (2/Page)</button>
+                    <button onclick="cetakBorangManual('LARIAN')" class="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-bold hover:bg-cyan-400 transition-all uppercase italic">Borang Larian</button>
+                    <button onclick="cetakBorangManual('LONTAR PELURU')" class="bg-white text-black px-4 py-2 rounded-lg text-[10px] font-bold hover:bg-purple-400 transition-all uppercase italic">Borang Lontar</button>
+                    <button id="btnPrintPDF" onclick="preparePrintReport()" class="bg-cyan-500 text-black px-4 py-2 rounded-lg text-[10px] font-bold hover:bg-white transition-all uppercase italic">Cetak PDF (2/Page)</button>
                 </div>
             </div>
             <table class="w-full text-left text-[10px] text-white">
@@ -84,6 +91,7 @@
         </div>
     </div>
 
+    <!-- MODAL PEMARKAHAN -->
     <div id="scoringModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl hidden">
         <div class="glass-card w-full max-w-5xl p-6 md:p-8 max-h-[95vh] overflow-y-auto relative border-cyan-400/30">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -94,7 +102,7 @@
                 </div>
                 <div class="md:col-span-8">
                     <div class="flex justify-between items-start mb-6 border-b border-white/10 pb-4">
-                        <h2 id="modalStudentName" class="text-4xl impact text-white italic">PELAJAR</h2>
+                        <h2 id="modalStudentName" class="text-4xl impact text-white italic uppercase">PELAJAR</h2>
                         <button onclick="closeModal()" class="text-cyan-500 text-4xl">×</button>
                     </div>
                     <div class="space-y-12">
@@ -119,41 +127,79 @@
         </div>
     </div>
 
+    <!-- POPUP RUBRIK - MATCHING IMAGE 4FC9C9 -->
     <div id="rubrikPopup" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden">
         <div class="glass-card w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col border-white/20">
             <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <h2 class="text-3xl impact text-white tracking-widest">RUJUKAN RUBRIK HP3 (25%)</h2>
+                <h2 class="text-3xl impact text-white tracking-widest uppercase">Rujukan Rubrik HP3 (25%)</h2>
                 <button onclick="closeRubrik()" class="text-white text-3xl hover:text-cyan-400">×</button>
             </div>
+            
             <div class="flex bg-white/5 border-b border-white/10">
-                <button id="tabLarian" onclick="switchTab('larian')" class="rubrik-tab active flex-1 py-4 font-bold text-xs uppercase">Lari Pecut</button>
-                <button id="tabLontar" onclick="switchTab('lontar')" class="rubrik-tab flex-1 py-4 font-bold text-xs uppercase">Lontar Peluru</button>
+                <button id="tabLarian" onclick="switchTab('larian')" class="rubrik-tab active flex-1 py-4 font-bold text-xs uppercase transition-all">Lari Pecut (Balapan)</button>
+                <button id="tabLontar" onclick="switchTab('lontar')" class="rubrik-tab flex-1 py-4 font-bold text-xs uppercase transition-all">Lontar Peluru (Padang)</button>
             </div>
-            <div class="p-6 overflow-y-auto text-[11px] text-white/80 leading-relaxed">
-                <div id="rubrikContentLarian" class="space-y-4">
-                    <p><b>AMAT CEMERLANG (23-25):</b> Pemasangan blok sempurna, posisi sedia (punggung lebih tinggi), masa tindak balas pantas, torso melintasi garisan tepat.</p>
+
+            <div class="p-6 overflow-y-auto text-[11px] leading-relaxed">
+                <!-- Colorful Category Boxes -->
+                <div class="grid grid-cols-5 gap-2 mb-6">
+                    <div class="cat-box bg-emerald-500/20 text-emerald-400 border-emerald-500/30">AMAT CEMERLANG<br>(23-25)</div>
+                    <div class="cat-box bg-blue-500/20 text-blue-400 border-blue-500/30">CEMERLANG<br>(19-22.9)</div>
+                    <div class="cat-box bg-purple-500/20 text-purple-400 border-purple-500/30">KEPUJIAN<br>(15-18.9)</div>
+                    <div class="cat-box bg-orange-500/20 text-orange-400 border-orange-500/30">SEDERHANA<br>(13-14.9)</div>
+                    <div class="cat-box bg-red-500/20 text-red-400 border-red-500/30">LEMAH<br>(<13)</div>
                 </div>
-                <div id="rubrikContentLontar" class="space-y-4 hidden">
-                    <p><b>AMAT CEMERLANG (23-25):</b> Pegangan pangkal jari, peluru di sisi leher, lungsuran pantas & licin, kilasan badan sempurna, pulihan dengan imbangan kaki kanan.</p>
+
+                <div id="rubrikContentBox" class="glass-card p-5 border-cyan-400/30 bg-white/5">
+                    <h4 id="rubrikTitle" class="text-cyan-400 font-bold uppercase mb-3">KRITERIA UTAMA LARIAN PECUT:</h4>
+                    <ul id="rubrikList" class="list-disc ml-5 space-y-3 text-white/80">
+                        <!-- Dynamic Content -->
+                    </ul>
                 </div>
+            </div>
+            <div class="p-4 bg-white/5 border-t border-white/10 text-center text-[9px] text-white/40 italic uppercase">
+                Sumber: Rubrik Pemarkahan Kokurikulum Olahraga
             </div>
         </div>
     </div>
 
-    <div id="printReport" class="print-only"></div>
+    <div id="printArea" class="print-only"></div>
 
     <script>
         const scriptURL = "https://script.google.com/macros/s/AKfycbzVzaPdACxnvKJDRG5cqKDZBhLu6V8z3g3N4MT55scDGIAgU-r3ekjMAt_Zj4x8O75lBg/exec";
+        const PLACEHOLDER_IMG = "https://via.placeholder.com/150x200?text=HP3+STUDENT";
+        
         let students = [], liveMarks = {}, selectedClass = "", currentRole = "Admin", activeId = null;
 
+        const val = (v) => { let n = parseFloat(v); return isNaN(n) ? 0 : n; };
         const fasaPecut = [{n:"Persediaan", w:12/25, m:12, c:"text-emerald-400"}, {n:"Sedia/Mula", w:8/25, m:8, c:"text-amber-400"}, {n:"Penamat", w:5/25, m:5, c:"text-red-400"}];
         const fasaLontar = [{n:"Sedia", w:12/25, m:12, c:"text-emerald-400"}, {n:"Lungsur", w:8/25, m:8, c:"text-amber-400"}, {n:"Lontar", w:3/25, m:3, c:"text-blue-400"}, {n:"Pulihan", w:2/25, m:2, c:"text-red-400"}];
 
-        window.openRubrik = () => document.getElementById('rubrikPopup').classList.remove('hidden');
-        window.closeRubrik = () => document.getElementById('rubrikPopup').classList.add('hidden');
-        window.switchTab = (tab) => {
-            if(tab==='larian'){document.getElementById('tabLarian').classList.add('active');document.getElementById('tabLontar').classList.remove('active');document.getElementById('rubrikContentLarian').classList.remove('hidden');document.getElementById('rubrikContentLontar').classList.add('hidden');}
-            else{document.getElementById('tabLontar').classList.add('active');document.getElementById('tabLarian').classList.remove('active');document.getElementById('rubrikContentLontar').classList.remove('hidden');document.getElementById('rubrikContentLarian').classList.add('hidden');}
+        const rubrikData = {
+            larian: {
+                title: "KRITERIA UTAMA LARIAN PECUT:",
+                color: "text-cyan-400",
+                border: "border-cyan-400/30",
+                list: [
+                    "<b>Persediaan:</b> Pemasangan blok permulaan dengan teknik betul tanpa bantuan.",
+                    "<b>Ke Garisan:</b> Melangkah pantas ke garisan, posisi dekam, tangan seluas bahu & selari garisan tepat.",
+                    "<b>Sedia:</b> Punggung lebih tinggi dari aras kepala, berat badan ke hadapan, bahu melepasi garisan & kepala tunduk relaks.",
+                    "<b>Mula:</b> Masa tindak balas amat pantas, tolakan kaki maksimum di blok & koordinasi tangan/kaki betul.",
+                    "<b>Penamat:</b> Melintasi garisan dengan torso, membuat dipping tepat & kekal imbangan/kepantasan."
+                ]
+            },
+            lontar: {
+                title: "KRITERIA UTAMA LONTAR PELURU:",
+                color: "text-purple-400",
+                border: "border-purple-400/30",
+                list: [
+                    "<b>Teknik Pegangan:</b> Peluru tidak menyentuh tapak tangan, dipegang pada pangkal 3 atau 5 jari.",
+                    "<b>Teknik Sedia:</b> Peluru di sisi leher bawah telinga, berdiri membelakangkan kawasan lontaran.",
+                    "<b>Lungsuran:</b> Kaki serentak ke belakang, dilakukan pantas, licin & kedua kaki dalam bulatan.",
+                    "<b>Lontaran:</b> Kilasan badan (pinggul ke kiri & atas), menolak sambil luruskan lutut (badan terangkat & melentik).",
+                    "<b>Pulihan:</b> Kaki kanan dibawa ke hadapan, lutut dibengkokkan sedikit untuk imbangan selepas lontaran."
+                ]
+            }
         };
 
         async function fetchMarks() {
@@ -162,84 +208,171 @@
                 const data = await res.json();
                 students = data.students || []; liveMarks = data.marks || {};
                 initFilters(); renderView();
-            } catch (e) { alert("RALAT DATA!"); }
+            } catch (e) { alert("SILA PERIKSA URL API ANDA!"); }
         }
 
         function initFilters() {
             const classes = [...new Set(students.map(s => s.class))].filter(c => c).sort();
             const options = '<option value="">-- PILIH KELAS --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('penilaiClassFilter').innerHTML = options;
-            document.getElementById('adminClassFilter').innerHTML = '<option value="">-- SEMUA KELAS --</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            if(document.getElementById('penilaiClassFilter')) document.getElementById('penilaiClassFilter').innerHTML = options;
+            if(document.getElementById('adminClassFilter')) document.getElementById('adminClassFilter').innerHTML = options;
         }
 
-        window.handleClass = (v) => { selectedClass = v; renderStudentList(); }
+        window.handleClass = (v) => { selectedClass = v; renderStudentList(); renderAdminTable(); }
 
         window.autoAlgo = () => {
-            const pVal = parseFloat(document.getElementById('numPecut').value) || 0;
-            const render = (id, val, fasa) => { document.getElementById(id).innerHTML = fasa.map(f => { const mark = (val * f.w).toFixed(1); return `<div class="bg-white/5 p-2 rounded text-center border border-white/5"><div class="text-[7px] text-white/40 uppercase font-bold">${f.n}</div><div class="text-[10px] font-bold ${f.c}">${mark}/${f.m}</div></div>`; }).join(''); };
-            render('detPecut', pVal, fasaPecut);
-            render('detLontar', parseFloat(document.getElementById('numLontar').value) || 0, fasaLontar);
-            document.getElementById('liveGradeDisplay').innerText = `TAHAP: ${getCategory(pVal).label}`;
-            document.getElementById('liveGradeDisplay').style.color = getCategory(pVal).color;
+            const pVal = val(document.getElementById('numPecut').value), lVal = val(document.getElementById('numLontar').value);
+            const render = (id, v, fasa) => { document.getElementById(id).innerHTML = fasa.map(x => `<div class="bg-white/5 p-2 rounded text-center border border-white/5"><div class="text-[7px] text-white/40 uppercase font-bold">${x.n}</div><div class="text-[10px] font-bold ${x.c}">${(v * x.w).toFixed(1)}/${x.m}</div></div>`).join(''); };
+            render('detPecut', pVal, fasaPecut); r('detLontar', lVal, fasaLontar);
+            document.getElementById('liveGradeDisplay').innerText = `TAHAP: ${getCategory(pVal + lVal).label}`;
+            document.getElementById('liveGradeDisplay').style.color = getCategory(pVal + lVal).color;
         }
+
+        function getCategory(v) { let n = val(v); if (n >= 46) return { label: 'AMAT CEMERLANG', color: '#00f2ff' }; if (n >= 38) return { label: 'CEMERLANG', color: '#10b981' }; if (n >= 30) return { label: 'KEPUJIAN', color: '#a855f7' }; return { label: 'LEMAH', color: '#ef4444' }; }
 
         window.renderAdminTable = () => {
-            const filter = document.getElementById('adminClassFilter').value;
-            const filtered = students.filter(s => !filter || s.class === filter);
+            const filtered = students.filter(s => !selectedClass || s.class === selectedClass);
             document.getElementById('adminTableBody').innerHTML = filtered.map(s => {
                 const m = liveMarks[s.id] || {};
-                const avgL = ((parseFloat(m['Penilai 1']?.pecut||0) + parseFloat(m['Penilai 2']?.pecut||0))/2).toFixed(1);
-                const avgT = ((parseFloat(m['Penilai 1']?.lontar||0) + parseFloat(m['Penilai 2']?.lontar||0))/2).toFixed(1);
-                const totalHP3 = (parseFloat(avgL) + parseFloat(avgT)).toFixed(1);
-                return `<tr><td class="p-4 font-bold text-white uppercase italic">${s.name}</td><td class="text-center text-cyan-400">${avgL}</td><td class="text-center">${avgT}</td><td class="text-center font-bold text-lg text-white bg-cyan-900/20">${totalHP3}</td><td class="text-center">AI Analysis</td><td class="p-4 text-right font-bold italic" style="color:${getCategory(parseFloat(avgL)).color}">${getCategory(parseFloat(avgL)).label}</td></tr>`;
+                const p1 = m["Penilai 1"] || {pecut:0, lontar:0}, p2 = m["Penilai 2"] || {pecut:0, lontar:0};
+                const avgL = ((val(p1.pecut) + val(p2.pecut)) / 2).toFixed(1);
+                const avgT = ((val(p1.lontar) + val(p2.lontar)) / 2).toFixed(1);
+                const total = (val(avgL) + val(avgT)).toFixed(1);
+                const aiDone = m.aiReport && m.aiReport.trim() !== "";
+                return `<tr><td class="p-4 font-bold uppercase italic text-white">${s.name}</td><td class="text-center text-cyan-400">${avgL}</td><td class="text-center">${avgT}</td><td class="text-center font-bold text-lg text-white bg-cyan-900/20">${total}</td><td class="text-center"><button onclick="janaAI('${s.id}','${s.name}',${avgL},${avgT})" class="px-2 py-1 text-[8px] font-bold rounded ${aiDone?'bg-emerald-500/20 text-emerald-400':'bg-cyan-500/10 text-cyan-400'} italic">${aiDone?'DONE':'✨ JANA_AI'}</button></td><td class="p-4 text-right font-bold italic uppercase" style="color:${getCategory(total).color}">${getCategory(total).label}</td></tr>`;
             }).join('');
-        }
-
-        window.preparePrintReport = async () => {
-            const container = document.getElementById('printReport'), filter = document.getElementById('adminClassFilter').value;
-            const filtered = students.filter(s => !filter || s.class === filter);
-            let html = "";
-            for (let i = 0; i < filtered.length; i += 2) {
-                html += `<div class="report-page">`;
-                for (let j = i; j < i + 2 && j < filtered.length; j++) {
-                    const s = filtered[j], m = liveMarks[s.id] || {}, ap = ((parseFloat(m['Penilai 1']?.pecut||0) + parseFloat(m['Penilai 2']?.pecut||0)) / 2).toFixed(2), al = ((parseFloat(m['Penilai 1']?.lontar||0) + parseFloat(m['Penilai 2']?.lontar||0)) / 2).toFixed(2);
-                    html += `<div class="student-row-pdf"><div><h3>LAPORAN HP3</h3><p>NAMA: ${s.name}<br>KELAS: ${s.class}</p></div><img src="${s.image}" class="student-img-pdf" onerror="this.src='https://via.placeholder.com/90x110?text=IMG'"><table><tr style="background:#eee"><th>ACARA</th><th>SKOR</th></tr><tr><td>LARIAN</td><td>${ap}</td></tr><tr><td>LONTARAN</td><td>${al}</td></tr><tr style="background:#f0f0f0; font-weight:bold;"><td>JUMLAH</td><td>${(parseFloat(ap)+parseFloat(al)).toFixed(2)}</td></tr></table><div style="font-size:11px;"><b>ULASAN PENGUJI:</b><br>${m.aiReport || ""}</div></div>`;
-                }
-                html += `</div>`;
-            }
-            container.innerHTML = html; window.print();
-        }
-
-        // FUNGSI CETAKAN BORANG MANUAL 3 KOLUM
-        window.cetakBorangManual = (tajuk) => {
-            const filter = document.getElementById('adminClassFilter').value;
-            if(!filter) { alert("Pilih kelas terlebih dahulu!"); return; }
-            const container = document.getElementById('printReport');
-            const filtered = students.filter(s => s.class === filter);
-            let html = `<div class="borang-manual-page">
-                <h1 style="text-align:center; text-decoration:underline; font-size:22px;">BORANG MARKAH MANUAL HP3</h1>
-                <h2 style="text-align:center; font-size:18px; text-transform:uppercase;">ACARA: ${tajuk}</h2>
-                <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;"><span>KELAS: ${filter}</span><span>TARIKH: _______________</span></div>
-                <div class="grid-borang">${filtered.map(s => `<div class="petak-pelajar"><div class="b-nama">${s.name}</div><div class="b-markah"></div></div>`).join('')}</div>
-                <div style="margin-top:40px; display:flex; justify-content:space-between; font-size:12px;"><div>Tandatangan Penilai: ____________________</div><div>Disahkan Oleh: ____________________</div></div>
-            </div>`;
-            container.innerHTML = html; window.print();
         }
 
         window.renderStudentList = () => {
             const container = document.getElementById('studentList');
-            if (!selectedClass) { container.innerHTML = '<div class="col-span-full text-center p-20 italic">Sila Pilih Kelas Dahulu</div>'; return; }
+            if (!selectedClass) { container.innerHTML = '<div class="col-span-full text-center p-20 italic opacity-40 uppercase">Sila Pilih Kelas Terlebih Dahulu</div>'; return; }
             container.innerHTML = students.filter(s => s.class === selectedClass).map(s => {
-                const hasMark = liveMarks[s.id] && liveMarks[s.id][currentRole] && (liveMarks[s.id][currentRole].pecut > 0);
+                const pData = (liveMarks[s.id] && liveMarks[s.id][currentRole]) || {};
+                const hasMark = val(pData.pecut) > 0 || val(pData.lontar) > 0;
                 return `<div onclick="openScoring('${s.id}')" class="glass-card p-6 cursor-pointer hover:border-cyan-400 transition-all flex justify-between items-center group"><span class="font-bold text-sm text-white uppercase italic">${s.name}</span><div class="h-2 w-2 rounded-full ${hasMark ? 'bg-cyan-400 shadow-[0_0_10px_#00f2ff]' : 'bg-red-900'}"></div></div>`;
             }).join('');
         }
 
-        function getCategory(v) { if (v >= 23) return { label: 'AMAT CEMERLANG', color: '#10b981' }; if (v >= 19) return { label: 'CEMERLANG', color: '#3b82f6' }; if (v >= 15) return { label: 'KEPUJIAN', color: '#a855f7' }; return { label: 'LEMAH', color: '#ef4444' }; }
-        window.switchRole = (r) => { currentRole = r; ['roleBtn1', 'roleBtn2', 'roleBtnAdmin'].forEach(id => document.getElementById(id).className = "px-6 py-2 rounded-xl text-xs font-bold text-white/50 transition-all"); document.getElementById(r === 'Penilai 1' ? 'roleBtn1' : r === 'Penilai 2' ? 'roleBtn2' : 'roleBtnAdmin').className = "px-6 py-2 rounded-xl text-xs bg-cyan-500 text-black font-bold transition-all"; renderView(); }
-        function renderView() { const pV = document.getElementById('penilaiView'), aV = document.getElementById('adminView'); if(currentRole === 'Admin') { pV.classList.add('hidden-section'); aV.classList.remove('hidden-section'); renderAdminTable(); } else { pV.classList.remove('hidden-section'); aV.classList.add('hidden-section'); renderStudentList(); } }
-        window.openScoring = (id) => { activeId = id; const s = students.find(x => x.id === id); if(!s) return; document.getElementById('modalStudentName').innerText = s.name; document.getElementById('modalStudentImg').src = s.image || ''; const m = (liveMarks[id] && liveMarks[id][currentRole]) || { pecut: 0, lontar: 0 }; document.getElementById('numPecut').value = m.pecut; document.getElementById('numLontar').value = m.lontar; autoAlgo(); document.getElementById('scoringModal').classList.remove('hidden'); }
-        window.saveData = async () => { const p = parseFloat(document.getElementById('numPecut').value), l = parseFloat(document.getElementById('numLontar').value); try { await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "SAVE_MARKS", id: activeId, role: currentRole, pecut: p, lontar: l }) }); document.getElementById('scoringModal').classList.add('hidden'); fetchMarks(); } finally {} }
+        window.cetakBorangManual = (tajuk) => {
+            if(!selectedClass) { alert("Pilih kelas dahulu!"); return; }
+            const container = document.getElementById('printArea');
+            const filtered = students.filter(s => s.class === selectedClass);
+            let html = `<div class="borang-container">
+                <h1 style="text-align:center; text-decoration:underline; font-size:22px; margin-bottom:5px;">BORANG MARKAH MANUAL AMALI HP3</h1>
+                <h2 style="text-align:center; font-size:18px; margin-bottom:20px; text-transform:uppercase;">ACARA: ${tajuk}</h2>
+                <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; font-size:12px;"><span>KELAS: ${selectedClass}</span><span>TARIKH: _______________</span></div>
+                <div class="grid-borang">${filtered.map(s => `<div class="petak-pelajar"><div class="b-nama">${s.name}</div><div class="b-markah"></div></div>`).join('')}</div>
+                <div style="margin-top:50px; display:flex; justify-content:space-between; font-size:12px; font-weight:bold;">
+                    <div>Tandatangan Penilai:<br><br><br>__________________________<br>( Nama: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
+                    <div style="text-align:right;">Disahkan Oleh:<br><br><br>__________________________<br>( KETUA PENGUJI )</div>
+                </div>
+            </div>`;
+            container.innerHTML = html; window.print();
+        }
+
+        // IMPROVED PDF REPORT PREPARATION WITH IMAGE LOADING FIX
+        async function preparePrintReport() {
+            const btn = document.getElementById('btnPrintPDF');
+            btn.innerText = "SEDANG MEMUAT..."; btn.disabled = true;
+            
+            const container = document.getElementById('printArea');
+            const filtered = students.filter(s => !selectedClass || s.class === selectedClass);
+            let html = "";
+            
+            for (let i = 0; i < filtered.length; i += 2) {
+                html += `<div class="report-page">`;
+                for (let j = i; j < i + 2 && j < filtered.length; j++) {
+                    const s = filtered[j], m = liveMarks[s.id] || {};
+                    const ap = ((val(m["Penilai 1"]?.pecut) + val(m["Penilai 2"]?.pecut)) / 2).toFixed(2);
+                    const al = ((val(m["Penilai 1"]?.lontar) + val(m["Penilai 2"]?.lontar)) / 2).toFixed(2);
+                    const pic = (s.image && s.image.length > 10) ? s.image : PLACEHOLDER_IMG;
+                    
+                    html += `<div class="student-row-pdf">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <h3 style="margin:0; font-size:22px; text-decoration:underline; color:black;">LAPORAN PENTAKSIRAN HP3</h3>
+                                <p style="margin:8px 0; color:black;"><b>NAMA:</b> ${s.name}<br><b>KELAS:</b> ${s.class} | <b>ID:</b> ${s.id}</p>
+                            </div>
+                            <img src="${pic}" class="student-img-pdf report-image" onerror="this.src='${PLACEHOLDER_IMG}'">
+                        </div>
+                        <table style="color:black; border-color:black;">
+                            <tr style="background:#eee"><th>ACARA OLAHRAGA</th><th>SKOR (25M)</th></tr>
+                            <tr><td>PURATA LARIAN PECUT</td><td>${ap}</td></tr>
+                            <tr><td>PURATA LONTAR PELURU</td><td>${al}</td></tr>
+                            <tr style="background:#f0f0f0; font-weight:bold;"><td>JUMLAH KESELURUHAN HP3 (50M)</td><td>${(parseFloat(ap)+parseFloat(al)).toFixed(2)}</td></tr>
+                        </table>
+                        <div style="padding:10px; border-left:5px solid #00f2ff; background:#f4f4f4; margin-top:10px; font-size:11px; color:black; min-height:45px;">
+                            <b>ULASAN PENGUJI:</b><br><i>${m.aiReport || ""}</i>
+                        </div>
+                    </div>`;
+                }
+                html += `</div>`;
+            }
+            container.innerHTML = html;
+
+            // Wait for images to load before printing
+            const imgs = container.querySelectorAll('.report-image');
+            const promises = Array.from(imgs).map(img => {
+                return new Promise((resolve) => {
+                    if (img.complete) resolve();
+                    else {
+                        img.onload = resolve;
+                        img.onerror = resolve; // Continue even if image fails
+                    }
+                });
+            });
+
+            await Promise.all(promises);
+            
+            // Short timeout to ensure rendering
+            setTimeout(() => {
+                window.print();
+                btn.innerText = "Cetak PDF (2/Page)"; 
+                btn.disabled = false;
+            }, 500);
+        }
+
+        async function janaAI(id, n, p, l) { await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ type: "JANA_AI", id: id, nama: n, finalPecut: p, finalLontar: l }) }); fetchMarks(); }
+        
+        window.switchRole = (r) => { 
+            currentRole = r; 
+            ['roleBtn1','roleBtn2','roleBtnAdmin'].forEach(i => document.getElementById(i).className = "px-6 py-2 rounded-xl text-xs font-bold text-white/50 transition-all"); 
+            document.getElementById(r==='Penilai 1'?'roleBtn1':r==='Penilai 2'?'roleBtn2':'roleBtnAdmin').className = "px-6 py-2 rounded-xl text-xs bg-cyan-500 text-black font-bold transition-all"; 
+            renderView(); 
+        }
+        
+        function renderView() { 
+            const pV = document.getElementById('penilaiView'), aV = document.getElementById('adminView'); 
+            if(currentRole === 'Admin') { pV.classList.add('hidden-section'); aV.classList.remove('hidden-section'); renderAdminTable(); } 
+            else { pV.classList.remove('hidden-section'); aV.classList.add('hidden-section'); renderStudentList(); } 
+        }
+
+        window.openRubrik = () => { switchTab('larian'); document.getElementById('rubrikPopup').classList.remove('hidden'); }
+        window.closeRubrik = () => document.getElementById('rubrikPopup').classList.add('hidden');
+        window.switchTab = (t) => {
+            const tabL = document.getElementById('tabLarian'), tabO = document.getElementById('tabLontar');
+            const data = rubrikData[t];
+            document.getElementById('rubrikTitle').innerText = data.title;
+            document.getElementById('rubrikTitle').className = `font-bold uppercase mb-3 ${data.color}`;
+            document.getElementById('rubrikContentBox').className = `glass-card p-5 bg-white/5 border-l-4 ${data.border}`;
+            document.getElementById('rubrikList').innerHTML = data.list.map(l => `<li>${l}</li>`).join('');
+            
+            if(t==='larian') { tabL.className="rubrik-tab active flex-1 py-4 font-bold text-xs uppercase"; tabO.className="rubrik-tab flex-1 py-4 font-bold text-xs uppercase"; }
+            else { tabO.className="rubrik-tab lontar-active flex-1 py-4 font-bold text-xs uppercase"; tabL.className="rubrik-tab flex-1 py-4 font-bold text-xs uppercase"; }
+        };
+
+        window.openScoring = (id) => { activeId = id; const s = students.find(x => x.id === id); if(!s) return; document.getElementById('modalStudentName').innerText = s.name; const pic = (s.image && s.image.length > 10) ? s.image : PLACEHOLDER_IMG; document.getElementById('modalStudentImg').src = pic; const m = (liveMarks[id] && liveMarks[id][currentRole]) || { pecut: 0, lontar: 0 }; document.getElementById('numPecut').value = m.pecut; document.getElementById('numLontar').value = m.lontar; autoAlgo(); document.getElementById('scoringModal').classList.remove('hidden'); }
+        
+        window.saveData = async () => { 
+            const p = val(document.getElementById('numPecut').value), l = val(document.getElementById('numLontar').value); 
+            const btn = document.querySelector("#scoringModal button#btnSave"); 
+            btn.innerText = "MENYIMPAN..."; btn.disabled = true; 
+            try { 
+                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "SAVE_MARKS", id: activeId, role: currentRole, pecut: p, lontar: l }) }); 
+                document.getElementById('scoringModal').classList.add('hidden'); fetchMarks(); 
+            } finally { btn.innerText = "Simpan Markah Automatik"; btn.disabled = false; } 
+        }
+
         window.closeModal = () => document.getElementById('scoringModal').classList.add('hidden');
         window.onload = fetchMarks;
     </script>
